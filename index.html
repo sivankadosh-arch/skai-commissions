@@ -95,6 +95,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" onclick="nav('leaders',this)"><span class="icon">🏆</span>Top earners</button>
     <button class="nav-btn" onclick="nav('managers',this)"><span class="icon">👥</span>Manager rollup</button>
     <button class="nav-btn" onclick="nav('attainment',this)"><span class="icon">🎯</span>Attainment</button>
+    <button class="nav-btn" onclick="nav('payrate',this)"><span class="icon">💰</span>Pay rate</button>
     <div class="nav-section">Compensation</div>
     <button class="nav-btn" onclick="nav('csd',this)"><span class="icon">📋</span>CSD analysis</button>
     <button class="nav-btn" onclick="nav('spiff',this)"><span class="icon">⭐</span>Spiff</button>
@@ -2969,6 +2970,173 @@ function renderAttContent(){
 }
 
 
+/* ── PAY RATE ────────────────────────────────────────────────────── */
+var _prMonth='Total YTD', _prPlan='all';
+
+function renderPayRate() {
+  _prMonth='Total YTD'; _prPlan='all';
+  var planSet={};
+  (PAY_RATE_DATA['Total YTD']||[]).forEach(function(e){ if(e.rate>0) planSet[e.pl]=1; });
+  var plansList=Object.keys(planSet).sort();
+  var mTabs=
+    '<button class="tab active" onclick="setPrMonth(\'Total YTD\',this)">Total YTD</button>'+
+    '<button class="tab" onclick="setPrMonth(\'January 2026\',this)">January 2026</button>'+
+    '<button class="tab" onclick="setPrMonth(\'February 2026\',this)">February 2026</button>'+
+    '<button class="tab" onclick="setPrMonth(\'March 2026\',this)">March 2026</button>'+'<button class="tab" onclick="setPrMonth(\'April 2026\',this)">April 2026</button>';
+  var pTabs='<button class="tab active" onclick="setPrPlan(\'all\',this)">All plans</button>';
+  plansList.forEach(function(p){ pTabs+='<button class="tab" onclick="setPrPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>'; });
+  document.getElementById('main').innerHTML=
+    '<div class="view">'+
+    '<div class="topbar"><div><div class="page-title">Pay rate</div>'+
+    '<div class="page-sub">Commission pay rate (% of bookings) per employee · January – April 2026</div></div></div>'+
+    '<div class="tabs" id="pr-month-tabs">'+mTabs+'</div>'+
+    '<div class="tabs" id="pr-plan-tabs">'+pTabs+'</div>'+
+    '<div id="pr-content"></div>'+
+    '</div>';
+  renderPrContent();
+}
+function setPrMonth(m,btn){_prMonth=m;document.querySelectorAll('#pr-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderPrContent();}
+function setPrPlan(p,btn){_prPlan=p;document.querySelectorAll('#pr-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderPrContent();}
+
+function renderPrContent() {
+  var all=(PAY_RATE_DATA[_prMonth]||[]).filter(function(e){
+    return (_prPlan==='all'||e.pl===_prPlan) && e.rate>0;
+  });
+  if(!all.length){document.getElementById('pr-content').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted2)">No pay rate data for this selection.</div>';return;}
+
+  var nRated = all.length;
+  var avgRate = (all.reduce(function(s,e){return s+e.rate;},0)/nRated).toFixed(2);
+  var maxRate = all[0].rate;
+  var minRate = all[nRated-1].rate;
+
+  var buckets = [
+    {label:'< 2%',   min:0,   max:2,   color:'#FF8161', n:0},
+    {label:'2–5%',   min:2,   max:5,   color:'#FFB900', n:0},
+    {label:'5–8%',   min:5,   max:8,   color:'#669AD2', n:0},
+    {label:'8–10%',  min:8,   max:10,  color:'#406EF1', n:0},
+    {label:'> 10%',  min:10,  max:999, color:'#111428', n:0},
+  ];
+  all.forEach(function(e){
+    for(var i=0;i<buckets.length;i++){
+      if(e.rate>=buckets[i].min && e.rate<buckets[i].max){ buckets[i].n++; break; }
+    }
+  });
+  var maxBkt = Math.max.apply(null,buckets.map(function(b){return b.n;}));
+
+  var planMap={};
+  all.forEach(function(e){
+    if(!planMap[e.pl])planMap[e.pl]={sum:0,n:0};
+    planMap[e.pl].sum+=e.rate; planMap[e.pl].n++;
+  });
+  var planAvgs=Object.keys(planMap).map(function(p){return{pl:p,avg:planMap[p].sum/planMap[p].n,n:planMap[p].n};}).sort(function(a,b){return b.avg-a.avg;});
+  var maxPlanAvg=planAvgs[0]?planAvgs[0].avg:1;
+
+  var rows='';
+  all.forEach(function(e,i){
+    var c=e.rate>10?'#111428':e.rate>8?'#406EF1':e.rate>5?'#669AD2':e.rate>2?'#FFB900':'#FF8161';
+    var bw=(e.rate/maxRate*100).toFixed(1);
+    var earnedRate = e.booking>0?(e.total/e.booking*100).toFixed(2):'—';
+    rows+='<tr>'+
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td class="fw">'+e.n+'</td>'+
+      '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>'+
+      '<td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
+      '<td class="num fw" style="color:'+c+'">'+e.rate.toFixed(2)+'%'+
+        '<div style="height:4px;background:var(--grey-light);border-radius:2px;margin-top:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+bw+'%;background:'+c+';border-radius:2px"></div>'+
+        '</div>'+
+      '</td>'+
+      '<td class="num">'+(e.booking>0?fm(e.booking):'—')+'</td>'+
+      '<td class="num fw">'+fm(e.total)+'</td>'+
+      '<td class="num" style="font-size:11px;color:var(--muted2)">'+earnedRate+(earnedRate!=='—'?'%':'')+'</td>'+
+      '</tr>';
+  });
+
+  var distBars='';
+  buckets.forEach(function(b){
+    var w=maxBkt>0?(b.n/maxBkt*100).toFixed(0):0;
+    distBars+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
+      '<div style="width:52px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0">'+b.label+'</div>'+
+      '<div style="flex:1;height:26px;background:var(--grey-light);border-radius:4px;overflow:hidden">'+
+        '<div style="height:100%;width:'+w+'%;background:'+b.color+';border-radius:4px;display:flex;align-items:center;padding:0 8px">'+
+          (b.n>0?'<span style="font-size:11px;font-weight:700;color:#fff">'+b.n+'</span>':'')+
+        '</div></div>'+
+      '<div style="width:30px;font-size:10px;color:var(--muted);text-align:right;flex-shrink:0">'+(nRated>0?(b.n/nRated*100).toFixed(0):0)+'%</div>'+
+    '</div>';
+  });
+
+  var planBars='';
+  planAvgs.forEach(function(p){
+    var c=p.avg>10?'#111428':p.avg>8?'#406EF1':p.avg>5?'#669AD2':p.avg>2?'#FFB900':'#FF8161';
+    var w=(p.avg/maxPlanAvg*100).toFixed(1);
+    planBars+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+      '<div style="width:130px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0">'+p.pl+'</div>'+
+      '<div style="flex:1;height:22px;background:var(--grey-light);border-radius:4px;overflow:hidden">'+
+        '<div style="height:100%;width:'+w+'%;background:'+c+';border-radius:4px;display:flex;align-items:center;padding:0 8px">'+
+          '<span style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap">'+p.avg.toFixed(2)+'%</span>'+
+        '</div></div>'+
+      '<div style="width:50px;font-size:10px;color:var(--muted);flex-shrink:0">'+p.n+' emps</div>'+
+    '</div>';
+  });
+
+  document.getElementById('pr-content').innerHTML=
+    '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">Pay rate by plan · '+_prMonth+'</div></div>'+
+    '<div class="tbl-wrap"><table>'+
+    '<thead><tr><th>Plan</th><th class="num">Employees</th><th class="num">Avg rate</th><th class="num">Highest</th><th class="num">Lowest</th><th class="num">Highest earner</th><th class="num">Lowest earner</th></tr></thead>'+
+    '<tbody>'+planAvgs.map(function(p){
+      var planEmps=[].concat(all).filter(function(e){return e.pl===p.pl;}).sort(function(a,b){return b.rate-a.rate;});
+      var hi=planEmps[0],lo=planEmps[planEmps.length-1];
+      var c=p.avg>10?'#111428':p.avg>8?'#406EF1':p.avg>5?'#669AD2':p.avg>2?'#FFB900':'#FF8161';
+      return '<tr>'+
+        '<td class="fw">'+p.pl+'</td>'+
+        '<td class="num">'+p.n+'</td>'+
+        '<td class="num fw" style="color:'+c+'">'+p.avg.toFixed(2)+'%</td>'+
+        '<td class="num" style="color:#406EF1">'+hi.rate.toFixed(2)+'%</td>'+
+        '<td class="num" style="color:#FF8161">'+lo.rate.toFixed(2)+'%</td>'+
+        '<td class="num" style="font-size:11px;color:var(--muted2)">'+hi.n+'</td>'+
+        '<td class="num" style="font-size:11px;color:var(--muted2)">'+lo.n+'</td>'+
+        '</tr>';
+    }).join('')+
+    '</tbody></table></div></div>'+
+    '<div class="grid2">'+
+    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Distribution by rate band</div></div>'+
+    '<div style="padding:4px 0">'+distBars+'</div></div>'+
+    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Average pay rate by plan</div></div>'+
+    '<div style="padding:4px 0">'+planBars+'</div></div>'+
+    '</div>'+
+    '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Pay rate by employee — sorted highest to lowest</div></div>'+
+    '<div class="ch" style="height:'+Math.max(all.length*26+60,200)+'px"><canvas id="prChart"></canvas></div></div>'+
+    '<div class="card"><div class="card-header"><div class="card-title">Employee pay rate detail</div></div>'+
+    '<div class="tbl-wrap"><table>'+
+    '<thead><tr>'+
+    '<th></th><th>Employee</th><th>Plan</th><th>Manager</th>'+
+    '<th class="num">Pay rate %</th>'+
+    '<th class="num">Monthly bookings</th>'+
+    '<th class="num">Total paid</th>'+
+    '<th class="num">Actual earned %</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table></div></div>';
+
+  mkChart('prChart',{type:'bar',data:{
+    labels: all.map(function(e){return e.n;}),
+    datasets:[{
+      data: all.map(function(e){return e.rate;}),
+      backgroundColor: all.map(function(e){
+        return e.rate>10?'#111428':e.rate>8?'#406EF1':e.rate>5?'#669AD2':e.rate>2?'#FFB900':'#FF8161';
+      }),
+      borderRadius:2,
+    }]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw.toFixed(2)+'%';}}}},
+    scales:{
+      x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},
+         title:{display:true,text:'Pay rate (% of bookings)',color:TICK_COLOR,font:{size:11}}},
+      y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}
+    }}});
+}
+
+
 /* ── SPIFF ───────────────────────────────────────────────────────── */
 var _spiffMonth='Total YTD',_spiffPlan='all';
 function renderSpiff(){
@@ -3428,7 +3596,7 @@ function renderGapContent() {
 var VIEW_MAP={
   overview:renderOverview,trend:renderTrend,bookings:renderBookings,
   csd:renderCSD,leaders:renderLeaders,managers:renderManagers,
-  attainment:renderAttainment,spiff:renderSpiff,
+  attainment:renderAttainment,payrate:renderPayRate,spiff:renderSpiff,
   breakdown:renderBreakdown,opps:renderOpps,oppgap:renderOppGap
 };
 function nav(view,btn){
