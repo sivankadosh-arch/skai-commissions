@@ -2624,6 +2624,13 @@ function setLdrChartMonth(m,btn){_ldrChartMonth=m;document.querySelectorAll('#ld
 function setLdrTableMonth(m,btn){_ldrTableMonth=m;document.querySelectorAll('#ldr-table-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');refreshLeaders();}
 function setLdrPlan(p,btn){_ldrPlan=p;document.querySelectorAll('#ldr-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');refreshLeaders();}
 
+/* Employees no longer at the company — highlighted in red */
+const INACTIVE_EMPS = new Set([
+  "Eric Vignieri",
+  "Max Erraouhi",
+  "Steve Williams",
+]);
+
 /* ── MANAGER ROLLUP ─────────────────────────────────────────────── */
 const MGR_DATA = {
   'Total YTD': [
@@ -2765,6 +2772,10 @@ function renderMgrContent() {
     return;
   }
 
+  // Build lookup: employees who earned anything YTD (used to filter zero_att in YTD view)
+  var empHasEarnings = {};
+  EMPLOYEES.forEach(function(e){ if(e.t > 0) empHasEarnings[e.n] = true; });
+
   var totT    = data.reduce(function(s,m){return s+m.t;},0);
   var totHC   = data.reduce(function(s,m){return s+m.hc;},0);
   var totSpiff= data.reduce(function(s,m){return s+m.spiff;},0);
@@ -2861,7 +2872,18 @@ function renderMgrContent() {
         :'')+
       '</div>' +
       (m.top_seller?'<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--grey-light);font-size:11px"><span style="color:var(--muted);font-weight:600">Top seller: </span><span style="color:var(--night);font-weight:700">'+m.top_seller+'</span> '+fm(m.top_seller_bk)+'</div>':'')+
-      (m.zero_att&&m.zero_att.length?'<div style="margin-top:6px;font-size:11px"><span style="color:#FF8161;font-weight:600">0% attainment ('+m.zero_att.length+'): </span><span style="color:var(--muted2)">'+m.zero_att.join(', ')+'</span></div>':'')+
+      (function(){
+        var zList = _mgrMonth==='Total YTD'
+          ? m.zero_att.filter(function(n){ return !empHasEarnings[n]; })
+          : m.zero_att;
+        if(!zList.length) return '';
+        var names = zList.map(function(n){
+          return INACTIVE_EMPS.has(n)
+            ? '<span style="color:#FF3B30;font-weight:600;text-decoration:line-through">'+n+'</span>'
+            : n;
+        }).join(', ');
+        return '<div style="margin-top:6px;font-size:11px"><span style="color:#FF8161;font-weight:600">0% attainment ('+zList.length+'): </span><span style="color:var(--muted2)">'+names+'</span></div>';
+      })()+
       '</div>';
   });
 
