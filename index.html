@@ -4789,7 +4789,7 @@ function renderOppNet() {
   _netData.forEach(function(o){if(o.month&&!mSeen[o.month]){mSeen[o.month]=1;mList.push(o.month);}});
   var MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
   mList.sort(function(a,b){if(a==='Total')return -1;if(b==='Total')return 1;var pa=a.split(' '),pb=b.split(' ');if(pa[1]!==pb[1])return parseInt(pa[1])-parseInt(pb[1]);return MO.indexOf(pa[0])-MO.indexOf(pb[0]);});
-  var mTabs=mList.map(function(m,i){return '<button class="tab'+(i===0?' active':'')+'" onclick="setNetMonth(''+m+'',this)">'+m+'</button>';}).join('');
+  var mTabs=mList.map(function(m,i){return '<button class="tab'+(i===0?' active':'')+'" onclick="setNetMonth(\''+m+'\',this)">'+m+'</button>';}).join('');
 
   document.getElementById('main').innerHTML =
     '<div class="view">' +
