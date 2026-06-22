@@ -102,6 +102,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" onclick="nav('breakdown',this)"><span class="icon">🔍</span>Pay breakdown</button>
     <div class="nav-section">Sales</div>
     <button class="nav-btn" onclick="nav('opps',this)"><span class="icon">🤝</span>Opportunities</button>
+    <button class="nav-btn" onclick="nav('oppnet',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Net Revenue</button>
     <button class="nav-btn" onclick="nav('oppgap',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Close-to-start</button>
     <div class="nav-section">Coming soon</div>
     <button class="nav-btn" style="cursor:default;opacity:0.45" disabled><span class="icon">📋</span>BTR <span style="font-size:9px;font-weight:700;background:rgba(255,185,0,0.25);color:#FFB900;padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">TBA</span></button>
@@ -3241,6 +3242,249 @@ const OPPS_ILM = [
   {plan:"Industry Lead Managers",emp:"Pedro Diogo",mgr:"Dan Madden",opp:"DarGlobal-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",bk:300000,month:"March 2026",closed:"3/6/2026",start:"3/1/2026",split:100},
   {plan:"Industry Lead Managers",emp:"Pedro Diogo",mgr:"Dan Madden",opp:"Lovehoney-Upsale-Pilot-Adv-AI Platform-WON",type:"Upsale",book:"Legacy",bk:27368,month:"March 2026",closed:"3/23/2026",start:"3/23/2026",split:100},
 ];
+
+const NET_OPP_DATA = [
+  {opp:"Code3-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"1/5/2026",month:"January 2026",acv:4500,bk:4500,emps:"Jeff Valente, Scott Merrill",comm:72.9,spiffs:135.0,payout:207.9,netAcv:4292,netPct:95.4},
+  {opp:"Cocolab (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/5/2026",month:"January 2026",acv:3124,bk:3124,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:3124,netPct:100.0},
+  {opp:"No Makeup Makeup (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/5/2026",month:"January 2026",acv:3905,bk:3905,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:3905,netPct:100.0},
+  {opp:"Praesidium-Renewal-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"1/7/2026",month:"January 2026",acv:88060,bk:0,emps:"Olga Puzhko, Paul Wainwright",comm:0.0,spiffs:0.0,payout:0.0,netAcv:88060,netPct:100.0},
+  {opp:"Magnitude Digital-Renewal-Agc-WON",type:"Renewal",book:"Legacy",closed:"1/10/2026",month:"January 2026",acv:0,bk:0,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Capella University-Upsale-Pilot-Adv-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"1/12/2026",month:"January 2026",acv:0,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Back to Nature (Booyah)-Upsale-RMS and Shipt-WON",type:"Upsale",book:"Legacy",closed:"1/12/2026",month:"January 2026",acv:7576,bk:7576,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:7576,netPct:100.0},
+  {opp:"H World International-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"1/12/2026",month:"January 2026",acv:150290,bk:150290,emps:"Daniel Madden, Olga Puzhko, Paul Wainwright, Pedro Diogo, Yusuf Khan",comm:17373.48,spiffs:788.02,payout:18161.5,netAcv:132129,netPct:87.9},
+  {opp:"Tambo-Renewal-1 month extension-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"1/12/2026",month:"January 2026",acv:16253,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:16253,netPct:100.0},
+  {opp:"Tambo-Dec-on demnad feeUpsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"1/13/2026",month:"January 2026",acv:27206,bk:27206,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:1205.9,spiffs:861.34,payout:2067.24,netAcv:25139,netPct:92.4},
+  {opp:"MRO MaryRuth, LLC-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"1/15/2026",month:"January 2026",acv:128250,bk:53250,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Julie Olamit",comm:761.47,spiffs:4000.0,payout:4761.48,netAcv:123489,netPct:96.3},
+  {opp:"Monster Energy-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"1/15/2026",month:"January 2026",acv:265000,bk:34000,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:826.2,spiffs:5319.7,payout:6145.9,netAcv:258854,netPct:97.7},
+  {opp:"Unilever-Net-New-Pilot-Unilever-AI Platform-WON",type:"Net-New",book:"Legacy",closed:"1/15/2026",month:"January 2026",acv:0,bk:0,emps:"Daniel Madden, David Sequeira, Paul Wainwright, Pedro Diogo, Samuel Benkel, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Praesidium-Upsale-Pilot-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"1/15/2026",month:"January 2026",acv:0,bk:0,emps:"Olga Puzhko, Paul Wainwright",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Yellow Pages Canada ( YP YPG )-Renewal-DexYP-platform-WON",type:"Renewal",book:"Platform",closed:"1/16/2026",month:"January 2026",acv:380134,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Kevin Weiss, Samuel Dhuey, Steve Williams",comm:0.0,spiffs:10000.0,payout:10000.0,netAcv:370134,netPct:97.4},
+  {opp:"Behr KILZ Paint (Reprise_New York)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/16/2026",month:"January 2026",acv:1208,bk:1208,emps:"Daniel Madden, David Sequeira, Kevin Weiss, Samuel Dhuey, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1208,netPct:100.0},
+  {opp:"H World International-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"1/16/2026",month:"January 2026",acv:0,bk:0,emps:"Daniel Madden, Olga Puzhko, Paul Wainwright, Pedro Diogo, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"BISSELL-Renewal-BISSELL (Global)-platform-WON",type:"Renewal",book:"Platform",closed:"1/20/2026",month:"January 2026",acv:780000,bk:52340,emps:"Allen Hammock, Daniel Madden, Daniel Moore, Jim Wasenius, Rich Sireno, Simon Piper Sales",comm:1034.04,spiffs:0.0,payout:1034.04,netAcv:778966,netPct:99.9},
+  {opp:"Ridgeline Insights-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"1/20/2026",month:"January 2026",acv:16200,bk:16200,emps:"Jeff Valente, Shana Martin",comm:196.83,spiffs:486.0,payout:682.83,netAcv:15517,netPct:95.8},
+  {opp:"be quiet!-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"1/21/2026",month:"January 2026",acv:82190,bk:23483,emps:"Daniel Madden, Olga Puzhko, Paul Wainwright, Pedro Diogo, Yusuf Khan",comm:1669.62,spiffs:38.98,payout:1708.6,netAcv:80481,netPct:97.9},
+  {opp:"Goodway Group, Inc.-Renewal-Agc-AI Platform-WON",type:"Renewal",book:"Legacy",closed:"1/22/2026",month:"January 2026",acv:360000,bk:0,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:360000,netPct:100.0},
+  {opp:"Amazon Sellers Egypt-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:0,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Aestura (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:8594,bk:8594,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:8594,netPct:100.0},
+  {opp:"Hanyul (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:1563,bk:1563,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1563,netPct:100.0},
+  {opp:"Elida Beauty (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:100003,bk:100003,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:100003,netPct:100.0},
+  {opp:"Bonduelle (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:56250,bk:56250,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:56250,netPct:100.0},
+  {opp:"Amazon Sellers KSA-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/23/2026",month:"January 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"The LEGO Group-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"1/27/2026",month:"January 2026",acv:557000,bk:131240,emps:"Allen Hammock, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Jim Wasenius, Matt Vignieri",comm:17149.79,spiffs:7624.8,payout:24774.59,netAcv:532225,netPct:95.6},
+  {opp:"Capella University-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"1/27/2026",month:"January 2026",acv:0,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"US Craft Brands LLC-Net-New-Pilot-Adv-platform-WON",type:"Net-New",book:"Platform",closed:"1/27/2026",month:"January 2026",acv:22853,bk:22853,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Lindsay Omaits, Shea Stine",comm:1596.88,spiffs:0.0,payout:1596.88,netAcv:21256,netPct:93.0},
+  {opp:"Hatchery Group-Upsale-Pilot-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"1/27/2026",month:"January 2026",acv:15000,bk:0,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:480.65,payout:480.65,netAcv:14519,netPct:96.8},
+  {opp:"Build.com-Upsale-Ferguson Enterprises-platform-WON",type:"Upsale",book:"Platform",closed:"1/27/2026",month:"January 2026",acv:0,bk:0,emps:"Jim Wasenius, Julie Olamit",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"TaylorMade Golf-Net-New-Adv-platform-WON",type:"Net-New",book:"Platform",closed:"1/28/2026",month:"January 2026",acv:83750,bk:83750,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Shea Stine",comm:6184.93,spiffs:0.0,payout:6184.93,netAcv:77565,netPct:92.6},
+  {opp:"Khoros - Amazon RMI-Upsale-Khoros - Amazon-platform-WON",type:"Upsale",book:"Platform",closed:"1/28/2026",month:"January 2026",acv:26780,bk:26780,emps:"Daniel Madden, Jim Wasenius, Kevin Weiss, Rich Sireno, Samuel Dhuey",comm:463.29,spiffs:803.4,payout:1266.69,netAcv:25513,netPct:95.3},
+  {opp:"Tillamook (via Mars United Commerce)-Renewal-Mars -platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"1/30/2026",month:"January 2026",acv:43000,bk:0,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:43000,netPct:100.0},
+  {opp:"Rise Interactive-Renewal-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"1/30/2026",month:"January 2026",acv:353400,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:1003.66,payout:1003.66,netAcv:352396,netPct:99.7},
+  {opp:"OeP, an Acosta Group agency-Renewal-Agc-platform-AI Platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"1/31/2026",month:"January 2026",acv:180000,bk:0,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:180000,netPct:100.0},
+  {opp:"Yellow Pages Canada ( YP YPG )-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"2/1/2026",month:"February 2026",acv:13425,bk:13207,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Steve Williams",comm:188.86,spiffs:402.75,payout:591.61,netAcv:12833,netPct:95.6},
+  {opp:"National Funding-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"2/3/2026",month:"February 2026",acv:75000,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Michael Heredia",comm:0.0,spiffs:0.0,payout:0.0,netAcv:75000,netPct:100.0},
+  {opp:"Care Dentistry Group-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"2/3/2026",month:"February 2026",acv:222000,bk:222000,emps:"Ashley Jenkins, Celine Nicole Levy, Connor Hank, Daniel Madden, Lindsay Omaits",comm:25851.9,spiffs:0.0,payout:25851.9,netAcv:196148,netPct:88.4},
+  {opp:"Premier Protein - PNC Instacart Display-WON",type:"Upsale",book:"Legacy",closed:"2/3/2026",month:"February 2026",acv:24043,bk:24043,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:24043,netPct:100.0},
+  {opp:"Lenovo-AMC and Audits License-Lenovo-WON",type:"Upsale",book:"Legacy",closed:"2/3/2026",month:"February 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Horizon Media-Renewal-Agc-WON",type:"Renewal",book:"Legacy",closed:"2/4/2026",month:"February 2026",acv:0,bk:0,emps:"Celine Nicole Levy, Daniel Madden, Jeff Valente, Lindsay Omaits, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"The Harvest Group-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"2/4/2026",month:"February 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Beam Suntory (Starcom_Chicago)-Renewal-Beam Suntor-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"2/5/2026",month:"February 2026",acv:162750,bk:7750,emps:"David Sequeira, Tom Harlukowicz",comm:943.17,spiffs:808.63,payout:1751.81,netAcv:160998,netPct:98.9},
+  {opp:"Fortune Brands-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"2/6/2026",month:"February 2026",acv:42240,bk:42240,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Rich Sireno",comm:604.03,spiffs:1267.2,payout:1871.23,netAcv:40369,netPct:95.6},
+  {opp:"Opella-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"2/6/2026",month:"February 2026",acv:44700,bk:44700,emps:"Brandon Vencott, Daniel Madden, Jim Wasenius, Kevin Weiss, Matt Vignieri",comm:5310.36,spiffs:1341.0,payout:6651.36,netAcv:38049,netPct:85.1},
+  {opp:"Tambo-Jan 2026 on demand fee-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"2/11/2026",month:"February 2026",acv:8002,bk:8002,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:354.68,spiffs:253.34,payout:608.02,netAcv:7394,netPct:92.4},
+  {opp:"Beeby Clark Meyler Conversion-Agc-platform-AI Platform-WON",type:"Pilot Conversion",book:"Platform",closed:"2/12/2026",month:"February 2026",acv:89000,bk:89000,emps:"Celine Nicole Levy, Daniel Madden, Jeff Valente, Lindsay Omaits, Shana Martin",comm:1998.05,spiffs:0.0,payout:1998.05,netAcv:87002,netPct:97.8},
+  {opp:"Estee Lauder EU-Upsale-Estee Lauder-platform-WON",type:"Upsale",book:"Platform",closed:"2/12/2026",month:"February 2026",acv:8106,bk:8106,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Yusuf Khan",comm:378.75,spiffs:337.7,payout:716.45,netAcv:7390,netPct:91.2},
+  {opp:"Unilever-Upsale-Unilever-platform-WON",type:"Upsale",book:"Platform",closed:"2/17/2026",month:"February 2026",acv:0,bk:0,emps:"David Sequeira, Paul Wainwright, Samuel Benkel",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"BIC-Upsale-BIC (via Profitero+)-AI Platform-WON",type:"Upsale",book:"Platform",closed:"2/18/2026",month:"February 2026",acv:0,bk:0,emps:"Ashley Jenkins, Michael Messerle",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"BIC-Upsale-BIC (via Profitero+)-AI Platform-WON",type:"Upsale",book:"Platform",closed:"2/18/2026",month:"February 2026",acv:0,bk:0,emps:"Ashley Jenkins, Michael Messerle",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Global Healing Center-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"2/19/2026",month:"February 2026",acv:556250,bk:152498,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Michael Heredia",comm:2180.72,spiffs:10000.0,payout:12180.72,netAcv:544069,netPct:97.8},
+  {opp:"Southwest-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"2/19/2026",month:"February 2026",acv:17500,bk:17500,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:17500,netPct:100.0},
+  {opp:"Holmes Smokehouse via Blue Ocean-Upsale-WMT-WON",type:"Upsale",book:"Legacy",closed:"2/20/2026",month:"February 2026",acv:4748,bk:4748,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:4748,netPct:100.0},
+  {opp:"Perrigo Canada (via Publicis)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"2/20/2026",month:"February 2026",acv:4197,bk:4196,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:4197,netPct:100.0},
+  {opp:"Code3-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"2/20/2026",month:"February 2026",acv:1000,bk:1000,emps:"Jeff Valente, Scott Merrill",comm:12.15,spiffs:30.0,payout:42.15,netAcv:958,netPct:95.8},
+  {opp:"Fortune Brands-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"2/20/2026",month:"February 2026",acv:474000,bk:18000,emps:"Jim Wasenius, Rich Sireno",comm:116.1,spiffs:0.0,payout:116.1,netAcv:473884,netPct:100.0},
+  {opp:"Zappos (via Tinuiti)-Upsale-Amazon.com-platform-WON",type:"Upsale",book:"Platform",closed:"2/20/2026",month:"February 2026",acv:0,bk:0,emps:"Matt Vignieri",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"AB InBev (via Profitero+)-Upsale-Profitero+-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"2/25/2026",month:"February 2026",acv:65000,bk:65000,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, David Sequeira, Michael Keaveny",comm:8898.5,spiffs:3415.1,payout:12313.6,netAcv:52686,netPct:81.1},
+  {opp:"LEGO (Via Publicis Commerce)-Upsale-Agc-WON",type:"Upsale",book:"Legacy",closed:"2/25/2026",month:"February 2026",acv:0,bk:0,emps:"Matt Vignieri",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Vodafone Global-Renewal-Adv-WON",type:"Renewal",book:"Legacy",closed:"2/25/2026",month:"February 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Unleashed Brands (Goodway Group)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"2/26/2026",month:"February 2026",acv:120758,bk:120758,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:120758,netPct:100.0},
+  {opp:"MABI-Retail Media (via Haworth)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"2/26/2026",month:"February 2026",acv:7364,bk:7364,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:7364,netPct:100.0},
+  {opp:"Dr. Squatch-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"2/27/2026",month:"February 2026",acv:300250,bk:50125,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Michael Heredia",comm:716.79,spiffs:0.0,payout:716.79,netAcv:299533,netPct:99.8},
+  {opp:"Microsoft-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"2/27/2026",month:"February 2026",acv:20000,bk:20000,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:20000,netPct:100.0},
+  {opp:"Mars Wrigley-Upsale-Starcom_Chicago-platform-WON",type:"Upsale",book:"Platform",closed:"2/27/2026",month:"February 2026",acv:1500000,bk:1500000,emps:"Brandon Vencott, Daniel Madden, David Sequeira, Kevin Weiss, Matt Vignieri, Michael Keaveny, Pedro Diogo, Simon Piper Sales, Yusuf Khan",comm:404587.5,spiffs:268425.0,payout:673012.5,netAcv:826988,netPct:55.1},
+  {opp:"Sony Marketing Inc.-Renewal-Sony Europe B.V.-WON",type:"Renewal",book:"Legacy",closed:"2/28/2026",month:"February 2026",acv:19200,bk:0,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:19200,netPct:100.0},
+  {opp:"Vodafone Global - Turkey-Renewal-Vodafone Global-WON",type:"Renewal",book:"Legacy",closed:"3/1/2026",month:"March 2026",acv:11741,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:11741,netPct:100.0},
+  {opp:"Campari Group (via Zenith)-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/3/2026",month:"March 2026",acv:64000,bk:64000,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, David Sequeira, Tom Harlukowicz",comm:8956.8,spiffs:6677.76,payout:15634.56,netAcv:48365,netPct:75.6},
+  {opp:"Tinuiti (fmr. EliteSEM)-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/3/2026",month:"March 2026",acv:13600,bk:13600,emps:"Jeff Valente, Matt Vignieri",comm:1580.32,spiffs:272.0,payout:1852.32,netAcv:11748,netPct:86.4},
+  {opp:"GlueIQ-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/3/2026",month:"March 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"SimpliSafe-Extension-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"3/3/2026",month:"March 2026",acv:79824,bk:0,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:79824,netPct:100.0},
+  {opp:"DoorDash-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/4/2026",month:"March 2026",acv:50000,bk:50000,emps:"Daniel Madden, Jim Wasenius, Kevin Weiss, Matt Vignieri, Samuel Dhuey",comm:6515.0,spiffs:1500.0,payout:8015.0,netAcv:41985,netPct:84.0},
+  {opp:"HEARST Magazines-Upsale-Adv-platform-WON-WON",type:"Upsale",book:"Platform",closed:"3/4/2026",month:"March 2026",acv:8100,bk:8100,emps:"Jim Wasenius, Yvonne Morel",comm:69.66,spiffs:243.0,payout:312.66,netAcv:7787,netPct:96.1},
+  {opp:"Ring EU-Upsale-Amazon.com-platform-WON",type:"Upsale",book:"Platform",closed:"3/5/2026",month:"March 2026",acv:43200,bk:43200,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:2656.8,spiffs:1367.71,payout:4024.51,netAcv:39175,netPct:90.7},
+  {opp:"Opella-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/5/2026",month:"March 2026",acv:12500,bk:12500,emps:"Jim Wasenius, Matt Vignieri",comm:1357.5,spiffs:250.0,payout:1607.5,netAcv:10892,netPct:87.1},
+  {opp:"Tr\u00eas Cora\u00e7\u00f5es via (Exverus - Brainlabs Brazil)-ADSP-WON",type:"Upsale",book:"Legacy",closed:"3/6/2026",month:"March 2026",acv:18273,bk:18273,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:18273,netPct:100.0},
+  {opp:"Positive Brand via Exverus - Brainlabs Brazil-ADSP-WON",type:"Upsale",book:"Legacy",closed:"3/6/2026",month:"March 2026",acv:30055,bk:30055,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:30055,netPct:100.0},
+  {opp:"Santillana via Exverus-Brainlabs Brazil-Upsale-ADSP-WON",type:"Upsale",book:"Legacy",closed:"3/6/2026",month:"March 2026",acv:2404,bk:2404,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:2404,netPct:100.0},
+  {opp:"DarGlobal-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/6/2026",month:"March 2026",acv:300000,bk:300000,emps:"Daniel Madden, Olga Puzhko, Paul Wainwright, Pedro Diogo, Yusuf Khan",comm:34680.0,spiffs:498.0,payout:35178.0,netAcv:264822,netPct:88.3},
+  {opp:"Fanatics-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/9/2026",month:"March 2026",acv:175500,bk:175500,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:2509.65,spiffs:7020.0,payout:9529.65,netAcv:165970,netPct:94.6},
+  {opp:"Market Defense-Renewal-Agc-WON",type:"Renewal",book:"Legacy",closed:"3/9/2026",month:"March 2026",acv:180000,bk:15000,emps:"Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss, Samuel Dhuey",comm:0.0,spiffs:0.0,payout:0.0,netAcv:180000,netPct:100.0},
+  {opp:"Essity (via Front Row)-Upsale-Essity UK-WON",type:"Upsale",book:"Legacy",closed:"3/9/2026",month:"March 2026",acv:60178,bk:60178,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:60178,netPct:100.0},
+  {opp:"Ring SMB-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/9/2026",month:"March 2026",acv:0,bk:0,emps:"David Henson bowen",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Charbroil (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/10/2026",month:"March 2026",acv:3910,bk:3910,emps:"Brandon Vencott, Daniel Madden, Jeff Valente, Kevin Weiss, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:3910,netPct:100.0},
+  {opp:"Tata Harper (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/10/2026",month:"March 2026",acv:5468,bk:5468,emps:"Brandon Vencott, Daniel Madden, Jeff Valente, Kevin Weiss, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:5468,netPct:100.0},
+  {opp:"Cargill-Net-New-Adv-platform-WON",type:"Net-New",book:"Platform",closed:"3/11/2026",month:"March 2026",acv:126500,bk:126500,emps:"Allie Kendall, Ashley Jenkins, Brandon Vencott, Daniel Madden, Kevin Weiss",comm:13687.3,spiffs:2839.96,payout:16527.26,netAcv:109973,netPct:86.9},
+  {opp:"Ring EU UKDEFRITES - Intercom-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/11/2026",month:"March 2026",acv:0,bk:0,emps:"David Henson bowen",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Perrigo USA (via Publicis)-Renewal-Adv-WON",type:"Renewal",book:"Legacy",closed:"3/11/2026",month:"March 2026",acv:0,bk:0,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Shift Digital-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/11/2026",month:"March 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"OneStone-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/11/2026",month:"March 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Rise Interactive-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/11/2026",month:"March 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Mogl-Net-New-Agc-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/12/2026",month:"March 2026",acv:90000,bk:90000,emps:"Daniel Madden, Jeff Valente, Kevin Weiss, Nick Zurek, Samuel Dhuey",comm:7069.5,spiffs:0.0,payout:7069.5,netAcv:82930,netPct:92.1},
+  {opp:"Castrol UK (via Mindshare EMEA)-Upsale-Castrol (vi-WON",type:"Upsale",book:"Legacy",closed:"3/12/2026",month:"March 2026",acv:0,bk:0,emps:"Daniel Madden, David Sequeira, Paul Wainwright, Pedro Diogo, Samuel Benkel, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Celsius Holdings-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/13/2026",month:"March 2026",acv:383000,bk:383000,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Connor Hank, Daniel Madden",comm:50824.11,spiffs:10164.82,payout:60988.93,netAcv:322011,netPct:84.1},
+  {opp:"Reckitt Benckiser (via AMP-AUC)-Upsale-SAMsCLUB-WON",type:"Upsale",book:"Legacy",closed:"3/13/2026",month:"March 2026",acv:15827,bk:15827,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:15827,netPct:100.0},
+  {opp:"Rocketbike-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/13/2026",month:"March 2026",acv:33250,bk:33250,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Jeff Valente, Nick Zurek",comm:5037.38,spiffs:0.0,payout:5037.38,netAcv:28213,netPct:84.9},
+  {opp:"Tambo-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/13/2026",month:"March 2026",acv:1600,bk:1600,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:70.93,spiffs:66.66,payout:137.59,netAcv:1462,netPct:91.4},
+  {opp:"Parfum du Coeur [PDC Wellness] (via MRM)-Upsale-MRM-WON",type:"Upsale",book:"Legacy",closed:"3/16/2026",month:"March 2026",acv:84979,bk:84979,emps:"Celine Nicole Levy, Daniel Madden, David Sequeira, Lindsay Omaits, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:84979,netPct:100.0},
+  {opp:"Advantage Solutions (AUC, AMP, Blue Ocean, Edge Ma-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"3/16/2026",month:"March 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Tambo-Renewal-Agc-platform-EXT-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/16/2026",month:"March 2026",acv:10669,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:10669,netPct:100.0},
+  {opp:"Chomps-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/16/2026",month:"March 2026",acv:0,bk:0,emps:"Jim Wasenius, Michael Heredia",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Marshall Associates Inc.-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/17/2026",month:"March 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Services International (OMD)-Upsale-Pilot-OMD Inte-WON",type:"Upsale",book:"Legacy",closed:"3/18/2026",month:"March 2026",acv:0,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Ring SMBUS-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/18/2026",month:"March 2026",acv:0,bk:0,emps:"David Henson bowen",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Market Defense-Upsale-Agc-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"3/19/2026",month:"March 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Garmin International-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"3/19/2026",month:"March 2026",acv:95000,bk:0,emps:"Daniel Madden, Jim Wasenius, Julie Olamit, Pedro Diogo, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:95000,netPct:100.0},
+  {opp:"Microsoft-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/19/2026",month:"March 2026",acv:145917,bk:145917,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:145917,netPct:100.0},
+  {opp:"SC Johnson (via Wavemaker)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/20/2026",month:"March 2026",acv:850016,bk:850016,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:850016,netPct:100.0},
+  {opp:"Caulipower via AMP Upsale-Instacart-WON",type:"Upsale",book:"Legacy",closed:"3/20/2026",month:"March 2026",acv:31738,bk:31738,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:31738,netPct:100.0},
+  {opp:"Coty Mexico-Upsale-Coty Global-WON",type:"Upsale",book:"Legacy",closed:"3/20/2026",month:"March 2026",acv:38123,bk:38123,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:38123,netPct:100.0},
+  {opp:"Versuni-Renewal-Royal Philips-platform-Extension-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/20/2026",month:"March 2026",acv:7773,bk:0,emps:"Daniel Madden, Olga Puzhko, Paul Wainwright, Pedro Diogo, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:7773,netPct:100.0},
+  {opp:"SharkNinja-Net-New-Pilot-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/22/2026",month:"March 2026",acv:0,bk:0,emps:"Ashley Jenkins, Michael Messerle",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"EPITAPH GROUP INC.-Renewal-Agc-WON",type:"Renewal",book:"Legacy",closed:"3/22/2026",month:"March 2026",acv:189750,bk:0,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:189750,netPct:100.0},
+  {opp:"Collective Measures (formally Nina Hale)-Renewal-A-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/23/2026",month:"March 2026",acv:1400000,bk:50000,emps:"Alex Fish, Daniel Madden, Jeff Valente, Kevin Weiss, Scott Merrill",comm:1190.0,spiffs:0.0,payout:1190.0,netAcv:1398810,netPct:99.9},
+  {opp:"Apple-Upsale-Adv-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"3/23/2026",month:"March 2026",acv:0,bk:0,emps:"Ashley Jenkins, Jon Silverman",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Craft & Commerce-Upsale-CelesteAI FOC trial-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/23/2026",month:"March 2026",acv:0,bk:0,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Advantage Solutions Youtube FOC-WON",type:"Upsale",book:"Legacy",closed:"3/23/2026",month:"March 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Lovehoney-Upsale-Pilot-Adv-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"3/23/2026",month:"March 2026",acv:27368,bk:27368,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:27368,netPct:100.0},
+  {opp:"Haleon Databox-Renewal-Haleon Global (via Publicis-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/24/2026",month:"March 2026",acv:311667,bk:45000,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:1994.62,spiffs:10074.7,payout:12069.33,netAcv:299598,netPct:96.1},
+  {opp:"E.ON-Upsale-E.ON-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"3/24/2026",month:"March 2026",acv:0,bk:0,emps:"Daniel Moore, Simon Piper Sales",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Suave 3P Advertising (via Stella Rising)-Upsale-Ad-WON",type:"Upsale",book:"Legacy",closed:"3/24/2026",month:"March 2026",acv:25017,bk:25017,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:25017,netPct:100.0},
+  {opp:"Amazon Music-Upsale-Amazon.com-platform-WON",type:"Upsale",book:"Platform",closed:"3/24/2026",month:"March 2026",acv:4000,bk:4000,emps:"Jim Wasenius, Rich Sireno",comm:25.8,spiffs:160.0,payout:185.8,netAcv:3814,netPct:95.4},
+  {opp:"Fusion92-Renewal-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"3/25/2026",month:"March 2026",acv:240000,bk:120000,emps:"Alex Fish, Daniel Madden, Jeff Valente, Kevin Weiss, Scott Merrill",comm:2856.0,spiffs:2000.0,payout:4856.0,netAcv:235144,netPct:98.0},
+  {opp:"Liquid Death-Net-New-Pilot-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/25/2026",month:"March 2026",acv:197000,bk:0,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Shea Stine",comm:0.0,spiffs:1248.0,payout:1248.0,netAcv:195752,netPct:99.4},
+  {opp:"Cargill (via Haworth)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/25/2026",month:"March 2026",acv:21053,bk:21052,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:21053,netPct:100.0},
+  {opp:"The Harvest Group-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/26/2026",month:"March 2026",acv:330000,bk:193500,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Jeff Valente, Shana Martin",comm:5882.4,spiffs:5000.0,payout:10882.4,netAcv:319118,netPct:96.7},
+  {opp:"Canon- Upsale- Legacy Via Dentsu-WON",type:"Upsale",book:"Legacy",closed:"3/26/2026",month:"March 2026",acv:122591,bk:122591,emps:"Daniel Madden, David Sequeira, Matthew Turner, Paul Wainwright, Pedro Diogo, Samuel Benkel, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:122591,netPct:100.0},
+  {opp:"Sony Europe B.V.-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/26/2026",month:"March 2026",acv:106847,bk:0,emps:"Daniel Moore, Simon Piper Sales",comm:0.0,spiffs:0.0,payout:0.0,netAcv:106847,netPct:100.0},
+  {opp:"Spark Novus - Colibri Group-30 day FOC EXTENSION-WON",type:"Upsale",book:"Platform",closed:"3/27/2026",month:"March 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Wellbeing Collective - Liquid I.V. (via Mindshare -AI Platform-WON",type:"Net-New",book:"Legacy",closed:"3/27/2026",month:"March 2026",acv:14211,bk:14211,emps:"Daniel Madden, David Sequeira, Paul Wainwright, Pedro Diogo, Samuel Benkel, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:14211,netPct:100.0},
+  {opp:"Radio Systems Corporation-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/27/2026",month:"March 2026",acv:28500,bk:28500,emps:"Jim Wasenius",comm:183.82,spiffs:0.0,payout:183.82,netAcv:28316,netPct:99.4},
+  {opp:"Apple Services via Dentsu-Upsale-Pilot-Agc-WON",type:"Upsale",book:"Legacy",closed:"3/27/2026",month:"March 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Adidas International-Renewal-adidas AG-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/28/2026",month:"March 2026",acv:235297,bk:82072,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:3637.85,spiffs:4136.24,payout:7774.09,netAcv:227523,netPct:96.7},
+  {opp:"Estee Lauder UK-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"3/30/2026",month:"March 2026",acv:11220,bk:11220,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Yusuf Khan",comm:524.26,spiffs:467.43,payout:991.69,netAcv:10228,netPct:91.2},
+  {opp:"Coty UK-Upsale-Coty Global-platform-WON",type:"Upsale",book:"Platform",closed:"3/30/2026",month:"March 2026",acv:12800,bk:12800,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:567.36,spiffs:405.25,payout:972.61,netAcv:11827,netPct:92.4},
+  {opp:"Coty DE-Upsale-Coty Global-platform-WON",type:"Upsale",book:"Platform",closed:"3/30/2026",month:"March 2026",acv:15360,bk:15360,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:680.83,spiffs:486.3,payout:1167.13,netAcv:14193,netPct:92.4},
+  {opp:"Roche Accu-Chek (via Flipside)-Transfer-Flipside G-WON",type:"Transfer",book:"Legacy",closed:"3/30/2026",month:"March 2026",acv:0,bk:0,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Tambo-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/30/2026",month:"March 2026",acv:3201,bk:3201,emps:"Simon Piper Sales, Taher Noor",comm:90.5,spiffs:96.03,payout:186.53,netAcv:3014,netPct:94.2},
+  {opp:"Almo Corporation-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:189000,bk:72128,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Michael Heredia",comm:1031.43,spiffs:4000.0,payout:5031.43,netAcv:183969,netPct:97.3},
+  {opp:"Momofuku-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:84328,bk:84328,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Nicole Beloyianis",comm:12345.62,spiffs:376.95,payout:12722.57,netAcv:71605,netPct:84.9},
+  {opp:"Global Havas Media Network(fka Channel Bakers) - P-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:1375000,bk:0,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, David Sequeira, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1375000,netPct:100.0},
+  {opp:"Acosta Group agency-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:69000,bk:69000,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:1690.51,spiffs:2070.0,payout:3760.51,netAcv:65239,netPct:94.5},
+  {opp:"Tinuiti (fmr. EliteSEM)-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:2550000,bk:501833,emps:"Daniel Madden, Jeff Valente, Kevin Weiss, Matt Vignieri, Samuel Dhuey",comm:61725.46,spiffs:10036.66,payout:71762.12,netAcv:2478238,netPct:97.2},
+  {opp:"Unilever Conversion-Unilever-AI Platform-WON",type:"Pilot Conversion",book:"Legacy",closed:"3/31/2026",month:"March 2026",acv:307252,bk:307252,emps:"Daniel Madden, David Sequeira, Matt Vignieri, Paul Wainwright, Pedro Diogo, Samuel Benkel, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:307252,netPct:100.0},
+  {opp:"De'Longhi-Pilot Conversion-Adv-AI Platform-WON",type:"Pilot Conversion",book:"Legacy",closed:"3/31/2026",month:"March 2026",acv:136768,bk:136768,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:136768,netPct:100.0},
+  {opp:"Kraft Heinz- Upsale- Tesco & Sainsbury's- via Dentsu-WON",type:"Upsale",book:"Legacy",closed:"3/31/2026",month:"March 2026",acv:28743,bk:28743,emps:"Daniel Madden, Matthew Turner, Paul Wainwright, Pedro Diogo, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:28743,netPct:100.0},
+  {opp:"Arla Foods-Upsale-Pilot-Arla Foods-WON",type:"Upsale",book:"Legacy",closed:"3/31/2026",month:"March 2026",acv:7917,bk:7917,emps:"Daniel Madden, Matthew Turner, Paul Wainwright, Pedro Diogo, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:7917,netPct:100.0},
+  {opp:"EAB Global-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"3/31/2026",month:"March 2026",acv:274600,bk:12600,emps:"Jeff Valente, Patti Soete",comm:204.12,spiffs:0.0,payout:204.12,netAcv:274396,netPct:99.9},
+  {opp:"Live Nation-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/31/2026",month:"March 2026",acv:41600,bk:41600,emps:"Jim Wasenius, Rich Sireno",comm:0.0,spiffs:0.0,payout:0.0,netAcv:41600,netPct:100.0},
+  {opp:"Verizon Sourcing LLC-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/6/2026",month:"April 2026",acv:0,bk:0,emps:"Jim Wasenius, Rich Sireno",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Unicorn Orange-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"4/7/2026",month:"April 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Lenovo UK-billing account-Lenovo-WON",type:"Upsale",book:"Legacy",closed:"4/8/2026",month:"April 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Lenovo-Renewal-license manager-EXT-Lenovo-WON",type:"Renewal",book:"Legacy",closed:"4/9/2026",month:"April 2026",acv:15029,bk:0,emps:"David Sequeira, Paul Wainwright, Samuel Benkel, Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:15029,netPct:100.0},
+  {opp:"Collective Measures (formally Nina Hale)-Upsale-Ad-platform-WON",type:"Upsale",book:"Platform",closed:"4/9/2026",month:"April 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"C.H. Guenther & Son-Upsale-WMT-WON",type:"Upsale",book:"Legacy",closed:"4/14/2026",month:"April 2026",acv:7934,bk:7934,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:7934,netPct:100.0},
+  {opp:"Tenet Healthcare-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/14/2026",month:"April 2026",acv:0,bk:0,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Delta Air Lines-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/14/2026",month:"April 2026",acv:33600,bk:33600,emps:"Jim Wasenius, Julie Olamit",comm:244.44,spiffs:1008.0,payout:1252.44,netAcv:32348,netPct:96.3},
+  {opp:"Power Digital Marketing-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"4/15/2026",month:"April 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Brahmin via AMP-Upsale-Google-WON",type:"Upsale",book:"Legacy",closed:"4/15/2026",month:"April 2026",acv:9521,bk:9521,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:9521,netPct:100.0},
+  {opp:"Haworth Marketing & Media-Upsale-Agc-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"4/15/2026",month:"April 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Global Havas Media Network(fka Channel Bakers) - P-platform-WON",type:"Upsale",book:"Platform",closed:"4/16/2026",month:"April 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Amore Pacific (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"4/17/2026",month:"April 2026",acv:8126,bk:8126,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:8126,netPct:100.0},
+  {opp:"Bayer Consumer Healthcare US-Upsale-Adv-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"4/17/2026",month:"April 2026",acv:0,bk:0,emps:"Jim Wasenius, Rich Sireno",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Uline-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"4/19/2026",month:"April 2026",acv:1378125,bk:0,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1378125,netPct:100.0},
+  {opp:"Matrixx Shopper Marketing Upsell CI keywords-WON",type:"Upsale",book:"Platform",closed:"4/20/2026",month:"April 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"TRUth-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"4/20/2026",month:"April 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Morning Walk (formerly Jacobson Rost)-Upsale-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"4/20/2026",month:"April 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Dr. Squatch-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/20/2026",month:"April 2026",acv:60000,bk:60000,emps:"Jim Wasenius, Michael Heredia",comm:582.0,spiffs:2400.0,payout:2982.0,netAcv:57018,netPct:95.0},
+  {opp:"Care Dentistry Group-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/21/2026",month:"April 2026",acv:0,bk:0,emps:"Ashley Jenkins, Connor Hank",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Power Digital ADSP Account-Upsale-Power Digital Ma-WON",type:"Upsale",book:"Legacy",closed:"4/21/2026",month:"April 2026",acv:175078,bk:175078,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:175078,netPct:100.0},
+  {opp:"Stella Rising-Upsale-Agc-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"4/21/2026",month:"April 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Wellbeing Collective - Liquid I.V. (via Mindshare-WON",type:"Upsale",book:"Legacy",closed:"4/22/2026",month:"April 2026",acv:0,bk:0,emps:"Daniel Madden, David Sequeira, Paul Wainwright, Pedro Diogo, Samuel Benkel, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Genesys-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"4/23/2026",month:"April 2026",acv:84788,bk:4038,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Michael Heredia",comm:102.57,spiffs:0.0,payout:102.57,netAcv:84685,netPct:99.9},
+  {opp:"Henkel-Net-New-Henkel Global AG & Co. KGaA-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"4/23/2026",month:"April 2026",acv:100400,bk:100400,emps:"Allie Kendall, Ashley Jenkins, Brandon Vencott, Daniel Madden, Kevin Weiss",comm:10863.28,spiffs:2172.66,payout:13035.94,netAcv:87364,netPct:87.0},
+  {opp:"TBC Corporation-Upsale-Adv-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"4/23/2026",month:"April 2026",acv:0,bk:0,emps:"Jim Wasenius, Julie Olamit",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Nestl\u00e9 Canada-Upsale-Nestl\u00e9 S.A-platform-WON",type:"Upsale",book:"Platform",closed:"4/24/2026",month:"April 2026",acv:0,bk:0,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"US Craft Brands LLC Conversion-Adv-platform-WON",type:"Pilot Conversion",book:"Platform",closed:"4/27/2026",month:"April 2026",acv:54267,bk:54267,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Lindsay Omaits, Shea Stine",comm:4004.88,spiffs:0.0,payout:4004.88,netAcv:50262,netPct:92.6},
+  {opp:"Verizon Value Brands (Zenith Media_US)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"4/27/2026",month:"April 2026",acv:21000,bk:21000,emps:"Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:21000,netPct:100.0},
+  {opp:"Plan B One-Step (Healix Global_NY)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"4/27/2026",month:"April 2026",acv:4616,bk:4616,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:4616,netPct:100.0},
+  {opp:"Capella University-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"4/28/2026",month:"April 2026",acv:505000,bk:7501,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Maxime Accadebled",comm:113.45,spiffs:0.0,payout:113.45,netAcv:504887,netPct:100.0},
+  {opp:"Fisher Investments-Renewal-Adv-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"4/28/2026",month:"April 2026",acv:252000,bk:52000,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Julie Olamit",comm:786.5,spiffs:4000.0,payout:4786.5,netAcv:247214,netPct:98.1},
+  {opp:"MABI-Social (via Haworth)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"4/28/2026",month:"April 2026",acv:23147,bk:23147,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:23147,netPct:100.0},
+  {opp:"DoorDash-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/28/2026",month:"April 2026",acv:0,bk:0,emps:"Matt Vignieri",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Hometown Food-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"4/29/2026",month:"April 2026",acv:73500,bk:3500,emps:"Jim Wasenius, Michael Heredia",comm:33.95,spiffs:0.0,payout:33.95,netAcv:73466,netPct:100.0},
+  {opp:"Wavemaker EMEA-Net-New-Pilot-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"4/30/2026",month:"April 2026",acv:0,bk:0,emps:"Daniel Madden, David Sequeira, Paul Wainwright, Pedro Diogo, Samuel Benkel, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Build.com-Renewal-Ferguson Enterprises-platform-WON",type:"Renewal",book:"Platform",closed:"4/30/2026",month:"April 2026",acv:91475,bk:6475,emps:"Jim Wasenius, Julie Olamit",comm:62.81,spiffs:1242.23,payout:1305.04,netAcv:90170,netPct:98.6},
+  {opp:"Genesys-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"4/30/2026",month:"April 2026",acv:8550,bk:8550,emps:"Jim Wasenius, Michael Heredia",comm:62.2,spiffs:342.0,payout:404.2,netAcv:8146,netPct:95.3},
+  {opp:"Straight North-Renewal-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"5/1/2026",month:"May 2026",acv:325168,bk:15168,emps:"Celine Nicole Levy, Daniel Madden, Jeff Valente, Lindsay Omaits, Nick Zurek",comm:1183.1,spiffs:9052.68,payout:10235.78,netAcv:314932,netPct:96.9},
+  {opp:"Education Dynamics (Agency Services)-Upsale-Agc-platform-AI Platform-WON-WON",type:"Upsale",book:"Platform",closed:"5/1/2026",month:"May 2026",acv:0,bk:0,emps:"Jeff Valente, Nick Zurek",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Shift Digital-Upsale-Agc-platform-EXT-AI Platform-WON",type:"Upsale",book:"Platform",closed:"5/1/2026",month:"May 2026",acv:0,bk:0,emps:"Jeff Valente, Shana Martin",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"AdProfit-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/4/2026",month:"May 2026",acv:114000,bk:40000,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Yusuf Khan",comm:1921.0,spiffs:4076.8,payout:5997.8,netAcv:108002,netPct:94.7},
+  {opp:"Matrixx CPG-Upsale-AMC+DSP-WON",type:"Upsale",book:"Platform",closed:"5/6/2026",month:"May 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Zap-Renewal-Adv-WON",type:"Renewal",book:"Legacy",closed:"5/7/2026",month:"May 2026",acv:30000,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:30000,netPct:100.0},
+  {opp:"MinsterFB-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"5/7/2026",month:"May 2026",acv:2959,bk:2959,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:134.99,spiffs:94.45,payout:229.44,netAcv:2730,netPct:92.2},
+  {opp:"Shift Digital-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/7/2026",month:"May 2026",acv:77750,bk:2750,emps:"Jeff Valente, Shana Martin",comm:33.41,spiffs:1119.6,payout:1153.01,netAcv:76597,netPct:98.5},
+  {opp:"Acosta Group agency-Upsale-Agc-ODM-WON",type:"Upsale",book:"Platform",closed:"5/8/2026",month:"May 2026",acv:49588,bk:49588,emps:"Claudia Virgilio, Jeff Valente",comm:602.49,spiffs:1487.64,payout:2090.13,netAcv:47498,netPct:95.8},
+  {opp:"Essity-Upsale-Pilot-Adv BR-WON",type:"Upsale",book:"Legacy",closed:"5/8/2026",month:"May 2026",acv:246,bk:246,emps:"Daniel Madden, David Henson bowen, Pedro Diogo, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:246,netPct:100.0},
+  {opp:"Haworth Marketing & Media-Renewal-Agc-AI Platform-WON",type:"Renewal",book:"Legacy",closed:"5/8/2026",month:"May 2026",acv:355080,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:355080,netPct:100.0},
+  {opp:"Mamonde (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"5/11/2026",month:"May 2026",acv:10313,bk:10313,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:10313,netPct:100.0},
+  {opp:"Powerplay-Upsale-Agc-AI Platform-WON",type:"Upsale",book:"Legacy",closed:"5/11/2026",month:"May 2026",acv:0,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Dr. Squatch-Upsale-Adv-platform-WON",type:"Upsale",book:"Platform",closed:"5/11/2026",month:"May 2026",acv:45000,bk:45000,emps:"Jim Wasenius, Michael Heredia",comm:327.38,spiffs:1800.0,payout:2127.38,netAcv:42873,netPct:95.3},
+  {opp:"SimpliSafe-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"5/11/2026",month:"May 2026",acv:12264,bk:0,emps:"Jim Wasenius, Maxime Accadebled",comm:0.0,spiffs:0.0,payout:0.0,netAcv:12264,netPct:100.0},
+  {opp:"Total Media-Renewal-EXT-Agc-platform-WON",type:"Renewal",book:"Platform",closed:"5/11/2026",month:"May 2026",acv:5379,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:5379,netPct:100.0},
+  {opp:"Tambo-Renewal EXT-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/11/2026",month:"May 2026",acv:10669,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:10669,netPct:100.0},
+  {opp:"Beam Suntory-Renewal-Beam Suntory-WON",type:"Renewal",book:"Legacy",closed:"5/13/2026",month:"May 2026",acv:54950,bk:0,emps:"Daniel Madden, Daniel Moore, Pedro Diogo, Simon Piper Sales, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:54950,netPct:100.0},
+  {opp:"Live Nation-Renewal-Adv-WON-WON",type:"Renewal",book:"Legacy",closed:"5/14/2026",month:"May 2026",acv:946000,bk:233595,emps:"Jim Wasenius, Rich Sireno",comm:0.0,spiffs:0.0,payout:0.0,netAcv:946000,netPct:100.0},
+  {opp:"Lenovo-Renewal-Adv-WON",type:"Renewal",book:"Legacy",closed:"5/15/2026",month:"May 2026",acv:116240,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:116240,netPct:100.0},
+  {opp:"Essity-Upsale-Adv AMC-WON",type:"Upsale",book:"Legacy",closed:"5/18/2026",month:"May 2026",acv:0,bk:0,emps:"David Henson bowen",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Church & Dwight (Wavemaker_New York)-Renewal-Churc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/21/2026",month:"May 2026",acv:394000,bk:0,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:394000,netPct:100.0},
+  {opp:"TravelPerk-Upsale-Pilot-Adv-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"5/22/2026",month:"May 2026",acv:0,bk:0,emps:"Daniel Madden, David Henson bowen, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Verizon Sourcing LLC-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"5/26/2026",month:"May 2026",acv:1550000,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Rich Sireno",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1550000,netPct:100.0},
+  {opp:"Booyah Advertising-Upsale-Agc-CelesteFOC-WON",type:"Upsale",book:"Legacy",closed:"5/27/2026",month:"May 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Collective Measures (formally Nina Hale)-Renewal-A-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/27/2026",month:"May 2026",acv:1000000,bk:0,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:1000000,netPct:100.0},
+  {opp:"MyEyeDr-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"5/27/2026",month:"May 2026",acv:191840,bk:191840,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:191840,netPct:100.0},
+  {opp:"Adidas (Mediacom_Los Angeles)-Renewal-adidas AG-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"5/28/2026",month:"May 2026",acv:182900,bk:0,emps:"David Sequeira, Tom Harlukowicz",comm:0.0,spiffs:0.0,payout:0.0,netAcv:182900,netPct:100.0},
+  {opp:"Market Performance Group-Renewal-Agc-AI Platform-WON",type:"Renewal",book:"Legacy",closed:"5/29/2026",month:"May 2026",acv:42000,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:42000,netPct:100.0},
+  {opp:"Witailer-Upsale ODF-Agc-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"5/29/2026",month:"May 2026",acv:62229,bk:62229,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Yusuf Khan",comm:2988.56,spiffs:2608.64,payout:5597.2,netAcv:56632,netPct:91.0},
+  {opp:"Nintendo (Direct)-Net-New-Adv-platform-WON",type:"Net-New",book:"Platform",closed:"5/29/2026",month:"May 2026",acv:95000,bk:95000,emps:"Jim Wasenius, Julie Olamit",comm:921.5,spiffs:0.0,payout:921.5,netAcv:94078,netPct:99.0},
+  {opp:"Omnishopper-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"5/29/2026",month:"May 2026",acv:0,bk:0,emps:"Simon Piper Sales, Taher Noor",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"JLab Audio-Renewal-Adv-platform-WON",type:"Renewal",book:"Platform",closed:"6/1/2026",month:"June 2026",acv:145000,bk:0,emps:"Chris Casciola",comm:0.0,spiffs:0.0,payout:0.0,netAcv:145000,netPct:100.0},
+  {opp:"WNRS via AMP-Upsale-Amazon-WON",type:"Upsale",book:"Legacy",closed:"6/1/2026",month:"June 2026",acv:6348,bk:6348,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:6348,netPct:100.0},
+  {opp:"Procter & Gamble-Net New- Platform-WON",type:"Net-New",book:"Platform",closed:"6/1/2026",month:"June 2026",acv:100862,bk:100862,emps:"Daniel Madden, Matthew Turner, Paul Wainwright, Pedro Diogo, Xavier Latty",comm:9072.54,spiffs:1349.53,payout:10422.07,netAcv:90440,netPct:89.7},
+  {opp:"Tambo Luzern Ecommerce Solutions UK-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"6/1/2026",month:"June 2026",acv:225716,bk:67700,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:3088.81,spiffs:129.98,payout:3218.79,netAcv:222497,netPct:98.6},
+  {opp:"Halo Pets (via AMP)-Upsale-Halo-WON",type:"Upsale",book:"Legacy",closed:"6/3/2026",month:"June 2026",acv:15869,bk:15869,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:15869,netPct:100.0},
+  {opp:"Dept-Net-New-Pilot-Agc-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"6/3/2026",month:"June 2026",acv:0,bk:0,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Yusuf Khan",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Cobs Bread (Epitaph)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"6/3/2026",month:"June 2026",acv:10551,bk:10551,emps:"Jeff Valente, Patti Soete",comm:0.0,spiffs:0.0,payout:0.0,netAcv:10551,netPct:100.0},
+  {opp:"MRO MaryRuth, LLC-Upsale-Pilot-Adv-platform-AI Platform-WON",type:"Upsale",book:"Platform",closed:"6/4/2026",month:"June 2026",acv:0,bk:0,emps:"Allen Hammock, Daniel Madden, Jim Wasenius, Julie Olamit",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Energizer-Net-New-Adv-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"6/8/2026",month:"June 2026",acv:704640,bk:704640,emps:"Ashley Jenkins, Bryan Edgecomb, Celine Nicole Levy, Daniel Madden, Matthew Turner, Nicole Beloyianis, Paul Wainwright, Pedro Diogo, Xavier Latty",comm:150198.42,spiffs:19673.55,payout:169871.97,netAcv:534768,netPct:75.9},
+  {opp:"Procter & Gamble-Upsale-AI Platform-WON",type:"Upsale",book:"Platform",closed:"6/8/2026",month:"June 2026",acv:0,bk:0,emps:"Matthew Turner, Paul Wainwright",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Nexus Brand Group-Net-New-Pilot-Agc-platform-AI Platform-WON",type:"Net-New",book:"Platform",closed:"6/9/2026",month:"June 2026",acv:0,bk:0,emps:"Brandon Vencott, Claudia Virgilio, Daniel Madden, Jeff Valente, Kevin Weiss",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Eagle Foods (via Haworth)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"6/9/2026",month:"June 2026",acv:114840,bk:114840,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:114840,netPct:100.0},
+  {opp:"Front Row Global-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"6/10/2026",month:"June 2026",acv:70448,bk:11238,emps:"Daniel Madden, Pedro Diogo, Simon Piper Sales, Taher Noor, Xavier Latty",comm:512.72,spiffs:21.58,payout:534.3,netAcv:69914,netPct:99.2},
+  {opp:"Mogl-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"6/10/2026",month:"June 2026",acv:0,bk:0,emps:"Jeff Valente, Nick Zurek",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Powerplay-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"6/12/2026",month:"June 2026",acv:100000,bk:11000,emps:"Brandon Vencott, Daniel Madden, Jeff Valente, Kevin Weiss, Scott Merrill",comm:269.5,spiffs:2000.0,payout:2269.5,netAcv:97730,netPct:97.7},
+  {opp:"AMP Agency-Upsale-OPENAI-WON",type:"Upsale",book:"Legacy",closed:"6/12/2026",month:"June 2026",acv:0,bk:0,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:0,netPct:0},
+  {opp:"Halo Pets (via AMP)-Upsale-Halo Amazon + DSP-WON",type:"Upsale",book:"Legacy",closed:"6/12/2026",month:"June 2026",acv:30611,bk:30611,emps:"Claudia Virgilio, Jeff Valente",comm:0.0,spiffs:0.0,payout:0.0,netAcv:30611,netPct:100.0},
+  {opp:"Bird Dog Media-Renewal-Agc-platform-AI Platform-WON",type:"Renewal",book:"Platform",closed:"6/15/2026",month:"June 2026",acv:26000,bk:11496,emps:"Claudia Virgilio, Jeff Valente",comm:186.24,spiffs:0.0,payout:186.24,netAcv:25814,netPct:99.3}
+];
 const OPPS_GAP = [
   {opp:"SC Johnson (via Wavemaker)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"3/20/2026",start:"7/1/2026",month:"March 2026",plan:"HoCo",gap:103},
   {opp:"Coty Mexico-Upsale-Coty Global-WON",type:"Upsale",book:"Legacy",closed:"3/20/2026",start:"6/24/2026",month:"March 2026",plan:"Growth",gap:96},
@@ -4536,6 +4780,131 @@ function _buildGapsData() {
   return result;
 }
 
+function renderOppNet() {
+  var _netMonth = 'Total';
+  var _netData = NET_OPP_DATA;
+
+  // Dynamic month tabs
+  var mSeen={}, mList=['Total'];
+  _netData.forEach(function(o){if(o.month&&!mSeen[o.month]){mSeen[o.month]=1;mList.push(o.month);}});
+  var MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  mList.sort(function(a,b){if(a==='Total')return -1;if(b==='Total')return 1;var pa=a.split(' '),pb=b.split(' ');if(pa[1]!==pb[1])return parseInt(pa[1])-parseInt(pb[1]);return MO.indexOf(pa[0])-MO.indexOf(pb[0]);});
+  var mTabs=mList.map(function(m,i){return '<button class="tab'+(i===0?' active':'')+'" onclick="setNetMonth(''+m+'',this)">'+m+'</button>';}).join('');
+
+  document.getElementById('main').innerHTML =
+    '<div class="view">' +
+    '<div class="topbar"><div><div class="page-title">Net Revenue</div>' +
+    '<div class="page-sub">ACV after commission & spiff payouts · unique opportunities</div></div></div>' +
+    '<div class="tabs" id="net-month-tabs">'+mTabs+'</div>' +
+    '<div id="net-content"></div>' +
+    '</div>';
+
+  window._netMonth = _netMonth;
+  window._netData  = _netData;
+  renderNetContent();
+}
+
+function setNetMonth(m,btn){
+  window._netMonth=m;
+  document.querySelectorAll('#net-month-tabs .tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active'); renderNetContent();
+}
+
+function renderNetContent() {
+  var m   = window._netMonth || 'Total';
+  var src = window._netData  || NET_OPP_DATA;
+  var data = m==='Total' ? src : src.filter(function(o){return o.month===m;});
+  if(!data.length){
+    document.getElementById('net-content').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted2)">No data for this selection.</div>';
+    return;
+  }
+
+  var totalAcv    = data.reduce(function(s,o){return s+o.acv;},0);
+  var totalNet    = data.reduce(function(s,o){return s+o.netAcv;},0);
+  var totalPayout = data.reduce(function(s,o){return s+o.payout;},0);
+  var avgNetPct   = totalAcv>0?(totalNet/totalAcv*100).toFixed(1):0;
+
+  // Type breakdown
+  var TYPE_C={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Transfer':'#878F91'};
+  var byType={};data.forEach(function(o){if(!byType[o.type])byType[o.type]={acv:0,net:0};byType[o.type].acv+=o.acv;byType[o.type].net+=o.netAcv;});
+  var typeKeys=Object.keys(byType).sort(function(a,b){return byType[b].acv-byType[a].acv;});
+
+  // Net % distribution buckets
+  var buckets=[
+    {label:'<70%',  n:0, color:'#c00'},
+    {label:'70–85%',n:0, color:'#FF8161'},
+    {label:'85–95%',n:0, color:'#FFB900'},
+    {label:'95–99%',n:0, color:'#669AD2'},
+    {label:'99–100%',n:0,color:'#406EF1'},
+  ];
+  data.forEach(function(o){
+    var p=o.netPct;
+    if(p<70)buckets[0].n++;
+    else if(p<85)buckets[1].n++;
+    else if(p<95)buckets[2].n++;
+    else if(p<99)buckets[3].n++;
+    else buckets[4].n++;
+  });
+  var maxN=Math.max.apply(null,buckets.map(function(b){return b.n;}))||1;
+  var distBars=buckets.map(function(b){
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+      '<div style="width:60px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0">'+b.label+'</div>' +
+      '<div style="flex:1;height:22px;background:var(--grey-light);border-radius:4px;overflow:hidden">' +
+        '<div style="height:100%;width:'+(b.n/maxN*100).toFixed(0)+'%;background:'+b.color+';border-radius:4px;display:flex;align-items:center;padding:0 8px">' +
+          (b.n>0?'<span style="font-size:11px;font-weight:700;color:#fff">'+b.n+'</span>':'')+
+        '</div></div>' +
+      '<div style="width:30px;font-size:10px;color:var(--muted);text-align:right;flex-shrink:0">'+(data.length>0?(b.n/data.length*100).toFixed(0):0)+'%</div>' +
+    '</div>';
+  }).join('');
+
+  // Sorted table — worst net % first
+  var sorted=data.slice().sort(function(a,b){return a.netPct-b.netPct;});
+  function netColor(p){return p<70?'#c00':p<85?'#FF8161':p<95?'#FFB900':p<99?'#669AD2':'#406EF1';}
+  var rows=sorted.map(function(o,i){
+    var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';
+    return '<tr>' +
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>' +
+      '<td class="fw" style="font-size:12px;max-width:200px">'+o.opp+'</td>' +
+      '<td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;background:'+tc+'18;color:'+tc+'">'+o.type+'</span></td>' +
+      '<td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td>' +
+      '<td style="font-size:11px;color:var(--muted2)">'+o.month+'</td>' +
+      '<td class="num">'+fm(o.acv)+'</td>' +
+      '<td class="num" style="color:#FF8161">'+fm(Math.round(o.payout))+'</td>' +
+      '<td class="num fw">'+fm(o.netAcv)+'</td>' +
+      '<td class="num fw" style="color:'+netColor(o.netPct)+'">'+o.netPct+'%</td>' +
+      '<td style="font-size:10px;color:var(--muted2);max-width:140px">'+o.emps+'</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('net-content').innerHTML =
+    '<div class="kpi-grid">' +
+    '<div class="kpi gr"><div class="kpi-label">Total ACV</div><div class="kpi-val">'+fm(totalAcv)+'</div><div class="kpi-sub">'+data.length+' opps</div></div>' +
+    '<div class="kpi gr"><div class="kpi-label">Net Revenue</div><div class="kpi-val">'+fm(totalNet)+'</div><div class="kpi-sub">after all payouts</div></div>' +
+    '<div class="kpi b"><div class="kpi-label">Avg Net %</div><div class="kpi-val">'+avgNetPct+'%</div><div class="kpi-sub">weighted by ACV</div></div>' +
+    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Net % distribution</div></div>' +
+    '<div style="padding:8px 0">'+distBars+'</div></div>' +
+    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">By type · ACV vs Net</div></div>' +
+    '<div class="ch" style="height:200px"><canvas id="netTypeChart"></canvas></div></div>' +
+    '</div>' +
+    '<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">All opportunities · sorted by lowest net %</div></div>' +
+    '<div class="tbl-wrap"><table>' +
+    '<thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th>Month</th><th class="num">ACV</th><th class="num">Payout</th><th class="num">Net ACV</th><th class="num">Net %</th><th>Employees</th></tr></thead>' +
+    '<tbody>'+rows+'</tbody>' +
+    '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
+    '</table></div></div>';
+
+  mkChart('netTypeChart',{type:'bar',data:{
+    labels:typeKeys,
+    datasets:[
+      {label:'ACV',data:typeKeys.map(function(t){return Math.round(byType[t].acv);}),backgroundColor:'#406EF118',borderColor:'#406EF1',borderWidth:2,borderRadius:3},
+      {label:'Net',data:typeKeys.map(function(t){return Math.round(byType[t].net);}),backgroundColor:'#669AD218',borderColor:'#669AD2',borderWidth:2,borderRadius:3}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},color:TICK_COLOR,boxWidth:9}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+fm(ctx.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:TICK_COLOR,font:{size:10}}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}}}}});
+}
+
+
 function renderOppGap() {
   var _gapMonth = 'Total';
   var _gapPlan  = 'all';
@@ -4679,7 +5048,7 @@ var VIEW_MAP={
   overview:renderOverview,trend:renderTrend,bookings:renderBookings,
   csd:renderCSD,leaders:renderLeaders,managers:renderManagers,
   attainment:renderAttainment,payrate:renderPayRate,spiff:renderSpiff,
-  breakdown:renderBreakdown,opps:renderOpps,oppgap:renderOppGap
+  breakdown:renderBreakdown,opps:renderOpps,oppnet:renderOppNet,oppgap:renderOppGap
 };
 function nav(view,btn){
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
