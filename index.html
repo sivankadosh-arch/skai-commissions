@@ -84,7 +84,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
 <aside>
   <div class="brand">
     <div class="brand-name">Skai Commissions</div>
-    <div class="brand-sub">2026 YTD · January – April</div>
+    <div class="brand-sub">2026 YTD · January – May</div>
   </div>
   <nav>
     <div class="nav-section">Overview</div>
@@ -2909,7 +2909,7 @@ function renderBookings(){
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){if(ctx.dataset.label==='Comm %')return ctx.raw!==null?'Comm %: '+ctx.raw+'%':null;return ctx.dataset.label+': '+fm(ctx.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:TICK_COLOR}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}},position:'left'},y2:{grid:{display:false},ticks:{color:'#b08400',callback:function(v){return v+'%';}},position:'right',min:0}}}});
 }
 
-function renderCSD(){_csdFilter='all';_csdMonth='Total YTD';document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">CSD analysis</div><div class="page-sub">2026 · CSD Baseline Actual, Quota & Attainment</div></div></div><div class="tabs" id="csd-month-tabs"><button class="tab active" onclick="setCsdMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setCsdMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setCsdMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setCsdMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setCsdMonth(\'April 2026\',this)">April 2026</button></div><div class="tabs" id="csd-filter-tabs"><button class="tab active" onclick="setCsdFilter(\'all\',this)">CSD & CSD LEAD</button><button class="tab" onclick="setCsdFilter(\'CSD\',this)">CSD only</button><button class="tab" onclick="setCsdFilter(\'CSD LEAD\',this)">CSD LEAD only</button></div><div id="csd-content"></div></div>';renderCsdContent();}
+function renderCSD(){_csdFilter='all';_csdMonth='Total YTD';document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">CSD analysis</div><div class="page-sub">2026 · CSD Baseline Actual, Quota & Attainment</div></div></div><div class="tabs" id="csd-month-tabs"><button class="tab active" onclick="setCsdMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setCsdMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setCsdMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setCsdMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setCsdMonth(\'April 2026\',this)">April 2026</button><button class="tab" onclick="setCsdMonth(\'May 2026\',this)">May 2026</button></div><div class="tabs" id="csd-filter-tabs"><button class="tab active" onclick="setCsdFilter(\'all\',this)">CSD & CSD LEAD</button><button class="tab" onclick="setCsdFilter(\'CSD\',this)">CSD only</button><button class="tab" onclick="setCsdFilter(\'CSD LEAD\',this)">CSD LEAD only</button></div><div id="csd-content"></div></div>';renderCsdContent();}
 function setCsdMonth(m,btn){_csdMonth=m;document.querySelectorAll('#csd-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderCsdContent();}
 function setCsdFilter(f,btn){_csdFilter=f;document.querySelectorAll('#csd-filter-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderCsdContent();}
 function renderCsdContent(){
@@ -3095,12 +3095,13 @@ function renderManagers() {
     '<button class="tab" onclick="setMgrMonth(\'January 2026\',this)">January 2026</button>' +
     '<button class="tab" onclick="setMgrMonth(\'February 2026\',this)">February 2026</button>' +
     '<button class="tab" onclick="setMgrMonth(\'March 2026\',this)">March 2026</button>' +
-    '<button class="tab" onclick="setMgrMonth(\'April 2026\',this)">April 2026</button>';
+    '<button class="tab" onclick="setMgrMonth(\'April 2026\',this)">April 2026</button>' +
+    '<button class="tab" onclick="setMgrMonth(\'May 2026\',this)">May 2026</button>';
 
   document.getElementById('main').innerHTML =
     '<div class="view">' +
     '<div class="topbar"><div><div class="page-title">Manager rollup</div>' +
-    '<div class="page-sub">Team performance · payment · attainment · pay rate · spiff · January – April 2026</div></div></div>' +
+    '<div class="page-sub">Team performance · payment · attainment · pay rate · spiff · January – May 2026</div></div></div>' +
     '<div class="tabs" id="mgr-month-tabs">' + mTabs + '</div>' +
     '<div id="mgr-content"></div>' +
     '</div>';
@@ -3301,12 +3302,12 @@ function renderMgrContent() {
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
 var _attMonth='May 2026',_attPlan='all';
 function renderAttainment(){
-  _attMonth='April 2026';_attPlan='all';
+  _attMonth='May 2026';_attPlan='all';
   var planSet={};Object.keys(ATTAINMENT_DATA).forEach(function(m){ATTAINMENT_DATA[m].forEach(function(e){planSet[e.pl]=1;});});
   var plansList=Object.keys(planSet).filter(function(p){return p!=='CSD'&&p!=='CSD LEAD';}).sort();
-  var mTabs='<button class="tab" onclick="setAttMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setAttMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setAttMonth(\'March 2026\',this)">March 2026</button><button class="tab active" onclick="setAttMonth(\'April 2026\',this)">April 2026</button>';
+  var mTabs='<button class="tab" onclick="setAttMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setAttMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setAttMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setAttMonth(\'April 2026\',this)">April 2026</button><button class="tab active" onclick="setAttMonth(\'May 2026\',this)">May 2026</button>';
   var pTabs='<button class="tab active" onclick="setAttPlan(\'all\',this)">All plans</button>';plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setAttPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';});
-  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – April 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div id="att-content"></div></div>';
+  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – May 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div id="att-content"></div></div>';
   renderAttContent();
 }
 function setAttMonth(m,btn){_attMonth=m;document.querySelectorAll('#att-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderAttContent();}
@@ -3353,13 +3354,15 @@ function renderPayRate() {
     '<button class="tab active" onclick="setPrMonth(\'Total YTD\',this)">Total YTD</button>'+
     '<button class="tab" onclick="setPrMonth(\'January 2026\',this)">January 2026</button>'+
     '<button class="tab" onclick="setPrMonth(\'February 2026\',this)">February 2026</button>'+
-    '<button class="tab" onclick="setPrMonth(\'March 2026\',this)">March 2026</button>'+'<button class="tab" onclick="setPrMonth(\'April 2026\',this)">April 2026</button>';
+    '<button class="tab" onclick="setPrMonth(\'March 2026\',this)">March 2026</button>'+
+    '<button class="tab" onclick="setPrMonth(\'April 2026\',this)">April 2026</button>'+
+    '<button class="tab" onclick="setPrMonth(\'May 2026\',this)">May 2026</button>';
   var pTabs='<button class="tab active" onclick="setPrPlan(\'all\',this)">All plans</button>';
   plansList.forEach(function(p){ pTabs+='<button class="tab" onclick="setPrPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>'; });
   document.getElementById('main').innerHTML=
     '<div class="view">'+
     '<div class="topbar"><div><div class="page-title">Pay rate</div>'+
-    '<div class="page-sub">Commission pay rate (% of bookings) per employee · January – April 2026</div></div></div>'+
+    '<div class="page-sub">Commission pay rate (% of bookings) per employee · January – May 2026</div></div></div>'+
     '<div class="tabs" id="pr-month-tabs">'+mTabs+'</div>'+
     '<div class="tabs" id="pr-plan-tabs">'+pTabs+'</div>'+
     '<div id="pr-content"></div>'+
@@ -3514,7 +3517,7 @@ function renderSpiff(){
   _spiffMonth='Total YTD';_spiffPlan='all';
   var planSet={};(SPIFF_DATA['Total YTD']||[]).forEach(function(e){planSet[e.pl]=1;});
   var plansList=Object.keys(planSet).sort();
-  var mTabs='<button class="tab active" onclick="setSpiffMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setSpiffMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setSpiffMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setSpiffMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setSpiffMonth(\'April 2026\',this)">April 2026</button>';
+  var mTabs='<button class="tab active" onclick="setSpiffMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setSpiffMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setSpiffMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setSpiffMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setSpiffMonth(\'April 2026\',this)">April 2026</button><button class="tab" onclick="setSpiffMonth(\'May 2026\',this)">May 2026</button>';
   var pTabs='<button class="tab active" onclick="setSpiffPlan(\'all\',this)">All plans</button>';plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setSpiffPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';});
   document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Spiff</div><div class="page-sub">2026 payout cycles incl. 2025 carryover-over spiff</div></div></div><div class="tabs" id="spiff-month-tabs">'+mTabs+'</div><div class="tabs" id="spiff-plan-tabs">'+pTabs+'</div><div id="spiff-content"></div></div>';
   renderSpiffContent();
@@ -3595,9 +3598,9 @@ var _bdMonth='Total YTD',_bdPlan='all';
 function renderBreakdown(){
   _bdMonth='Total YTD';_bdPlan='all';
   var plansList=[];(BD['Total YTD']||[]).forEach(function(e){if(plansList.indexOf(e.pl)<0)plansList.push(e.pl);});plansList.sort();
-  var mTabs='<button class="tab active" onclick="setBdMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setBdMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setBdMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setBdMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setBdMonth(\'April 2026\',this)">April 2026</button>';
+  var mTabs='<button class="tab active" onclick="setBdMonth(\'Total YTD\',this)">Total YTD</button><button class="tab" onclick="setBdMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setBdMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setBdMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setBdMonth(\'April 2026\',this)">April 2026</button><button class="tab" onclick="setBdMonth(\'May 2026\',this)">May 2026</button>';
   var pTabs='<button class="tab active" onclick="setBdPlan(\'all\',this)">All plans</button>';plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setBdPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';});
-  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Pay breakdown</div><div class="page-sub">Payment components per employee · January – April 2026</div></div></div><div class="tabs" id="bd-month-tabs">'+mTabs+'</div><div class="tabs" id="bd-plan-tabs">'+pTabs+'</div><div id="bd-content"></div></div>';
+  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Pay breakdown</div><div class="page-sub">Payment components per employee · January – May 2026</div></div></div><div class="tabs" id="bd-month-tabs">'+mTabs+'</div><div class="tabs" id="bd-plan-tabs">'+pTabs+'</div><div id="bd-content"></div></div>';
   renderBdContent();
 }
 function setBdMonth(m,btn){_bdMonth=m;document.querySelectorAll('#bd-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderBdContent();}
@@ -3677,7 +3680,7 @@ function renderBdContent(){
 var _oppMonth='Total';
 function renderOpps(){
   _oppMonth='Total';
-  var mTabs='<button class="tab active" onclick="setOppMonth(\'Total\',this)">Total</button><button class="tab" onclick="setOppMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setOppMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setOppMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setOppMonth(\'April 2026\',this)">April 2026</button>';
+  var mTabs='<button class="tab active" onclick="setOppMonth(\'Total\',this)">Total</button><button class="tab" onclick="setOppMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setOppMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setOppMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setOppMonth(\'April 2026\',this)">April 2026</button><button class="tab" onclick="setOppMonth(\'May 2026\',this)">May 2026</button>';
   document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Opportunities</div><div class="page-sub">2026 · Monthly Incremental Bookings · excl. Industry Lead & IL Managers</div></div></div><div class="tabs" id="opp-month-tabs">'+mTabs+'</div><div id="opp-content"></div></div>';
   renderOppContent();
 }
