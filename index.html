@@ -4442,12 +4442,17 @@ function renderOppContent(){
   var empKeys=Object.keys(empBk).filter(function(e){return empBk[e]>0;}).sort(function(a,b){return empBk[b]-empBk[a];});
   var kpis='<div class="kpi g"><div class="kpi-label">Total Monthly Incremental Bookings</div><div class="kpi-val">'+fm(totalBk)+'</div><div class="kpi-sub">'+nOpps+' opps</div></div><div class="kpi g"><div class="kpi-label">Top seller</div><div class="kpi-val" style="font-size:16px">'+topSeller+'</div><div class="kpi-sub">'+fm(topBk)+'</div></div><div class="kpi b"><div class="kpi-label">Platform</div><div class="kpi-val">'+fm(platBk)+'</div><div class="kpi-sub">'+(totalBk>0?(platBk/totalBk*100).toFixed(0):0)+'%</div></div><div class="kpi b"><div class="kpi-label">Legacy</div><div class="kpi-val">'+fm(legBk)+'</div><div class="kpi-sub">'+(totalBk>0?(legBk/totalBk*100).toFixed(0):0)+'%</div></div>';
   var t5rows='';top5.forEach(function(o,i){var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';t5rows+='<tr><td><span class="rk '+(i===0?'gold':i===1?'silver':i===2?'bronze':'')+'">'+(i+1)+'</span></td><td class="fw" style="font-size:12px;max-width:200px">'+o.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+o.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(o.bk)+'</td><td style="font-size:11px;color:var(--muted2)">'+o.emp+'</td><td style="font-size:11px;color:var(--muted2)">'+o.plan+'</td></tr>';});
-  var searchAll=document.getElementById('search-all')?document.getElementById('search-all').value.toLowerCase():'';
-  if(searchAll) sorted=sorted.filter(function(o){return (o.opp+o.emp+(o.type||'')).toLowerCase().indexOf(searchAll)>=0;});
-  var aRows='';sorted.forEach(function(o,i){var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';var splitBadge=o.split&&o.split<100?'<span style="font-size:9px;font-weight:600;background:#FFB90022;color:#b08400;padding:1px 5px;border-radius:4px;margin-left:3px">'+o.split+'%</span>':'';aRows+='<tr><td style="color:var(--muted);font-size:11px">'+(i+1)+'</td><td class="fw" style="font-size:12px;max-width:220px">'+o.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+o.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(o.bk)+splitBadge+'</td><td style="font-size:11px;color:var(--muted2)">'+o.emp+'</td><td style="font-size:11px;color:var(--muted2)">'+o.plan+'</td><td style="font-size:11px;color:var(--muted2)">'+o.mgr+'</td><td style="font-size:11px;color:var(--muted2)">'+o.month+'</td></tr>';});
-  // ── Shared opps table ────────────────────────────────────────────
+  // ── All opps (unfiltered by role) ────────────────────────────────
+  var allOppsForTable=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
+  var searchAll2=document.getElementById('search-all')?document.getElementById('search-all').value.toLowerCase():'';
+  var allSorted=[].concat(allOppsForTable).filter(function(o){return o.bk>0;}).sort(function(a,b){return b.bk-a.bk;});
+  if(searchAll2) allSorted=allSorted.filter(function(o){return (o.opp+o.emp+(o.type||'')).toLowerCase().indexOf(searchAll2)>=0;});
+  var allRows='';allSorted.forEach(function(o,i){var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';var splitBadge=o.split&&o.split<100?'<span style="font-size:9px;font-weight:600;background:#FFB90022;color:#b08400;padding:1px 5px;border-radius:4px;margin-left:3px">'+o.split+'%</span>':'';allRows+='<tr><td style="color:var(--muted);font-size:11px">'+(i+1)+'</td><td class="fw" style="font-size:12px;max-width:220px">'+o.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+o.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(o.bk)+splitBadge+'</td><td style="font-size:11px;color:var(--muted2)">'+o.emp+'</td><td style="font-size:11px;color:var(--muted2)">'+o.plan+'</td><td style="font-size:11px;color:var(--muted2)">'+o.mgr+'</td><td style="font-size:11px;color:var(--muted2)">'+o.month+'</td></tr>';});
+  var allTotalBk=allOppsForTable.reduce(function(s,o){return s+o.bk;},0);
+
+  // ── Shared opps table (all data) ─────────────────────────────────
   var oppGroupMap = {};
-  opps.forEach(function(o){
+  allOppsForTable.forEach(function(o){
     if(!o.opp) return;
     var key=o.opp.trim().toLowerCase();
     if(!oppGroupMap[key]) oppGroupMap[key]=[];
@@ -4489,60 +4494,6 @@ function renderOppContent(){
   }
 
 
-  // ── Shared tables for SL, IL, ILM ────────────────────────────────
-  function buildPlanSharedHtml(data, planLabel, color, searchId) {
-    var rows = _oppMonth==='Total' ? data : data.filter(function(o){return o.month===_oppMonth;});
-    var searchVal = document.getElementById(searchId) ? document.getElementById(searchId).value.toLowerCase() : '';
-    if(searchVal) rows = rows.filter(function(o){return (o.opp+o.emp+(o.type||'')).toLowerCase().indexOf(searchVal)>=0;});
-    if(!rows.length) return '<div class="card"><div class="card-header"><div class="card-title">'+planLabel+' opportunities</div></div>'+
-      '<div style="padding:0 0 12px 0"><input id="'+searchId+'" type="text" placeholder="Search…" oninput="renderOppContent()" style="width:100%;padding:8px 12px;border:1.5px solid #E8EEF0;border-radius:8px;font-size:13px;outline:none"></div>'+
-      '<div style="padding:20px;text-align:center;color:var(--muted2);font-size:13px">No results</div></div>';
-    var groups={};
-    rows.forEach(function(o){
-      if(!o.opp) return;
-      var k=o.opp.trim().toLowerCase();
-      if(!groups[k]) groups[k]=[];
-      groups[k].push(o);
-    });
-    var allOpps=Object.keys(groups).map(function(k){
-      var reps=groups[k];
-      return {opp:reps[0].opp,type:reps[0].type,book:reps[0].book,
-              total:reps.reduce(function(s,r){return s+r.bk;},0),reps:reps};
-    }).sort(function(a,b){return b.total-a.total;});
-    if(!allOpps.length) return '';
-    var TYPE_C={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Other':'#878F91'};
-    var trows='';
-    allOpps.forEach(function(g){
-      var tc=TYPE_C[g.type]||'#878F91',bc=g.book==='Platform'?'#406EF1':'#878F91';
-      g.reps.forEach(function(r,i){
-        var splitBadge=r.split&&r.split<100?'<span style="font-size:9px;font-weight:600;background:#FFB90022;color:#b08400;padding:1px 5px;border-radius:4px;margin-left:3px">'+r.split+'%</span>':'';
-        trows+='<tr>'+
-          (i===0?'<td class="fw" style="font-size:12px;vertical-align:top" rowspan="'+g.reps.length+'">'+g.opp+
-            '<div style="margin-top:3px">'+
-            '<span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px;background:'+tc+'18;color:'+tc+'">'+g.type+'</span>'+
-            '<span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px;background:'+bc+'18;color:'+bc+';margin-left:3px">'+g.book+'</span>'+
-            '</div></td>':'')+
-          '<td style="font-size:11px;color:var(--muted2)">'+r.emp+'</td>'+
-          '<td class="num">'+fm(r.bk)+splitBadge+'</td>'+
-          '<td style="font-size:11px;color:var(--muted2)">'+r.month+'</td>'+
-          (i===0?'<td class="num fw" style="color:'+color+';vertical-align:top" rowspan="'+g.reps.length+'">'+fm(g.total)+'</td>':'')+
-          '</tr>';
-      });
-    });
-    var totBk=allOpps.reduce(function(s,g){return s+g.total;},0);
-    return '<div class="card"><div class="card-header">'+
-      '<div class="card-title">'+planLabel+' opportunities</div>'+
-      '<div style="font-size:11px;color:var(--muted2)">'+allOpps.length+' opps · '+fm(totBk)+'</div>'+
-      '</div>'+
-      '<div style="padding:0 0 12px 0"><input id="'+searchId+'" type="text" placeholder="Search opportunity, employee, type…" oninput="renderOppContent()" style="width:100%;padding:8px 12px;border:1.5px solid #E8EEF0;border-radius:8px;font-size:13px;outline:none"></div>'+
-      '<div class="tbl-wrap"><table>'+
-      '<thead><tr><th>Opportunity</th><th>Employee</th><th class="num">Bookings</th><th>Month</th><th class="num">Total</th></tr></thead>'+
-      '<tbody>'+trows+'</tbody></table></div></div>';
-  }
-
-  var slHtml  = buildPlanSharedHtml(OPPS_SL,  'Sales Leadership',         '#406EF1', 'search-sl');
-  var ilHtml  = buildPlanSharedHtml(OPPS_IL,  'Industry Lead',             '#669AD2', 'search-il');
-  var ilmHtml = buildPlanSharedHtml(OPPS_ILM, 'Industry Lead Managers',    '#FFB900', 'search-ilm');
 
   // ── gap analysis moved to renderOppGap() ──
 
@@ -4554,8 +4505,8 @@ function renderOppContent(){
     '<div class="card"><div class="card-header"><div class="card-title">Bookings by employee</div></div><div class="tabs" id="opp-emp-role-tabs" style="margin:0 0 10px 0"><button class="tab active" onclick="setOppEmpRole(\'sellers\',this)">Sellers</button><button class="tab" onclick="setOppEmpRole(\'managers\',this)">Managers</button><button class="tab" onclick="setOppEmpRole(\'il\',this)">IL</button><button class="tab" onclick="setOppEmpRole(\'hoi\',this)">IL Lead</button></div><div class="ch" style="height:200px"><canvas id="oppEmpChart"></canvas></div></div>'+
     '<div class="card"><div class="card-header"><div class="card-title">All opportunities</div></div>'+
     '<div style="padding:0 0 12px 0"><input id="search-all" type="text" placeholder="Search opportunity, employee, type…" oninput="renderOppContent()" style="width:100%;padding:8px 12px;border:1.5px solid #E8EEF0;border-radius:8px;font-size:13px;outline:none"></div>'+
-    '<div class="tbl-wrap"><table><thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th class="num">Monthly bookings</th><th>Employee</th><th>Plan</th><th>Manager</th><th>Month</th></tr></thead><tbody>'+aRows+'</tbody><tfoot><tr class="trow"><td colspan="4">Total</td><td class="num">'+fm(totalBk)+'</td><td colspan="4"></td></tr></tfoot></table></div></div>'+
-    sharedHtml + slHtml + ilHtml + ilmHtml;
+    '<div class="tbl-wrap"><table><thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th class="num">Monthly bookings</th><th>Employee</th><th>Plan</th><th>Manager</th><th>Month</th></tr></thead><tbody>'+allRows+'</tbody><tfoot><tr class="trow"><td colspan="4">Total</td><td class="num">'+fm(allTotalBk)+'</td><td colspan="4"></td></tr></tfoot></table></div></div>'+
+    sharedHtml;
   mkChart('oppTypeChart',{type:'doughnut',data:{labels:typeKeys,datasets:[{data:typeKeys.map(function(t){return Math.round(byType[t]);}),backgroundColor:typeKeys.map(function(t){return TYPE_C[t]||'#878F91';}),borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{font:{size:10},color:TICK_COLOR,boxWidth:9,padding:7}},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+fm(ctx.raw)+' ('+(totalBk>0?(ctx.raw/totalBk*100).toFixed(0):0)+'%)';}}}}}}); 
   mkChart('oppBookChart',{type:'doughnut',data:{labels:['Platform','Legacy'],datasets:[{data:[Math.round(platBk),Math.round(legBk)],backgroundColor:['#406EF1','#878F91'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{font:{size:11},color:TICK_COLOR,boxWidth:9,padding:8}},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+fm(ctx.raw)+' ('+(totalBk>0?(ctx.raw/totalBk*100).toFixed(1):0)+'%)';}}}}}});
   _oppEmpRole='sellers';
