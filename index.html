@@ -4673,18 +4673,18 @@ function renderOppContent(){
   var byType={};opps.forEach(function(o){if(o.bk>0)byType[o.type]=(byType[o.type]||0)+o.bk;});
   var typeKeys=Object.keys(byType).sort(function(a,b){return byType[b]-byType[a];});
   var TYPE_C={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Other':'#878F91'};
-  // Top 5 unique opportunities — deduplicate by opp name, keep highest bk per unique opp
-  var seenOpps={};
-  // Top 5 — deduplicated by opp name (data already seller-only)
-  var top5=[].concat(opps).filter(function(o){return o.bk>0;}).sort(function(a,b){return b.bk-a.bk;}).filter(function(o){
+  // Top 5 — grouped by opp name, full 100% booking, all credited sellers
+  var t5Groups={};
+  opps.filter(function(o){return o.bk>0;}).forEach(function(o){
     var key=o.opp.trim().toLowerCase();
-    if(seenOpps[key]) return false;
-    seenOpps[key]=1; return true;
-  }).slice(0,5);
+    if(!t5Groups[key]) t5Groups[key]={opp:o.opp,type:o.type,book:o.book,fullBk:o.split>0?Math.round(o.bk*100/o.split):o.bk,emps:[]};
+    if(t5Groups[key].emps.indexOf(o.emp)<0) t5Groups[key].emps.push(o.emp);
+  });
+  var top5=Object.keys(t5Groups).map(function(k){return t5Groups[k];}).sort(function(a,b){return b.fullBk-a.fullBk;}).slice(0,5);
   var sorted=[].concat(opps).filter(function(o){return o.bk>0;}).sort(function(a,b){return b.bk-a.bk;});
   var empKeys=Object.keys(empBk).filter(function(e){return empBk[e]>0;}).sort(function(a,b){return empBk[b]-empBk[a];});
   var kpis='<div class="kpi g"><div class="kpi-label">Total Monthly Incremental Bookings</div><div class="kpi-val">'+fm(totalBk)+'</div><div class="kpi-sub">'+nOpps+' opps</div></div><div class="kpi g"><div class="kpi-label">Top seller</div><div class="kpi-val" style="font-size:16px">'+topSeller+'</div><div class="kpi-sub">'+fm(topBk)+'</div></div><div class="kpi b"><div class="kpi-label">Platform</div><div class="kpi-val">'+fm(platBk)+'</div><div class="kpi-sub">'+(totalBk>0?(platBk/totalBk*100).toFixed(0):0)+'%</div></div><div class="kpi b"><div class="kpi-label">Legacy</div><div class="kpi-val">'+fm(legBk)+'</div><div class="kpi-sub">'+(totalBk>0?(legBk/totalBk*100).toFixed(0):0)+'%</div></div>';
-  var t5rows='';top5.forEach(function(o,i){var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';t5rows+='<tr><td><span class="rk '+(i===0?'gold':i===1?'silver':i===2?'bronze':'')+'">'+(i+1)+'</span></td><td class="fw" style="font-size:12px;max-width:200px">'+o.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+o.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(o.bk)+'</td><td style="font-size:11px;color:var(--muted2)">'+o.emp+'</td><td style="font-size:11px;color:var(--muted2)">'+o.plan+'</td></tr>';});
+  var t5rows='';top5.forEach(function(g,i){var tc=TYPE_C[g.type]||'#878F91',bc=g.book==='Platform'?'#406EF1':'#878F91';t5rows+='<tr><td><span class="rk '+(i===0?'gold':i===1?'silver':i===2?'bronze':'')+'">'+(i+1)+'</span></td><td class="fw" style="font-size:12px;max-width:200px">'+g.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+g.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+g.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(g.fullBk)+'</td><td style="font-size:11px;color:var(--muted2)">'+g.emps.join(', ')+'</td></tr>';});
   // ── All opps (unfiltered by role) ────────────────────────────────
   var allOppsForTable=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
   var searchAll2=document.getElementById('search-all')?document.getElementById('search-all').value.toLowerCase():'';
@@ -4744,7 +4744,7 @@ function renderOppContent(){
     '<div class="kpi-grid">'+kpis+'</div>'+
     '<div class="grid2"><div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">By opp type</div></div><div class="ch" style="height:200px"><canvas id="oppTypeChart"></canvas></div></div>'+
     '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Platform vs Legacy</div></div><div class="ch" style="height:200px"><canvas id="oppBookChart"></canvas></div></div></div>'+
-    '<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">Top 5 · highest Monthly Incremental Bookings</div></div><table><thead><tr><th style="width:30px"></th><th>Opportunity</th><th>Type</th><th>Price book</th><th class="num">Monthly bookings</th><th>Employee</th><th>Plan</th></tr></thead><tbody>'+t5rows+'</tbody></table></div>'+
+    '<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">Top 5 · highest Monthly Incremental Bookings</div></div><table><thead><tr><th style="width:30px"></th><th>Opportunity</th><th>Type</th><th>Price book</th><th class="num">Bookings (100%)</th><th>Credited sellers</th></tr></thead><tbody>'+t5rows+'</tbody></table></div>'+
     '<div class="card"><div class="card-header"><div class="card-title">Bookings by employee</div></div><div class="tabs" id="opp-emp-role-tabs" style="margin:0 0 10px 0"><button class="tab active" onclick="setOppEmpRole(\'sellers\',this)">Sellers</button><button class="tab" onclick="setOppEmpRole(\'managers\',this)">Managers</button><button class="tab" onclick="setOppEmpRole(\'il\',this)">IL</button><button class="tab" onclick="setOppEmpRole(\'hoi\',this)">IL Lead</button></div><div class="ch" style="height:200px"><canvas id="oppEmpChart"></canvas></div></div>'+
     '<div class="card"><div class="card-header"><div class="card-title">All opportunities</div></div>'+
     '<div style="padding:0 0 12px 0"><input id="search-all" type="text" placeholder="Search opportunity, employee, type…" oninput="renderOppContent()" style="width:100%;padding:8px 12px;border:1.5px solid #E8EEF0;border-radius:8px;font-size:13px;outline:none"></div>'+
