@@ -2990,6 +2990,7 @@ const OPPS_2026 = [
   {plan:"Industry Lead",emp:"Yusuf Khan",mgr:"Pedro Diogo",opp:"Dept-Net-New-Pilot-Agc-platform-AI Platform-WON",type:"Net-New",book:"Platform",bk:0,month:"June 2026",closed:"6/3/2026",start:"6/4/2026",split:100},
   {plan:"Growth",emp:"Yvonne Morel",mgr:"Jim Wasenius",opp:"HEARST Magazines-Upsale-Adv-platform-WON-WON",type:"Upsale",book:"Platform",bk:8100,month:"March 2026",closed:"3/4/2026",start:"2/1/2026",split:100}
 ];
+var _oppsData = OPPS_2026;
 const OPPS_SL = [
   {plan:"Sales Leadership",emp:"Ashley Jenkins",mgr:"",opp:"US Craft Brands LLC-Net-New-Pilot-Adv-platform-WON",type:"Net-New",book:"Platform",bk:22853,month:"January 2026",closed:"1/27/2026",start:"3/1/2026",split:100},
   {plan:"Sales Leadership",emp:"Ashley Jenkins",mgr:"",opp:"TaylorMade Golf-Net-New-Adv-platform-WON",type:"Net-New",book:"Platform",bk:83750,month:"January 2026",closed:"1/28/2026",start:"3/1/2026",split:100},
@@ -4390,13 +4391,16 @@ function renderBdContent(){
 var _oppMonth='Total';
 function renderOpps(){
   _oppMonth='Total';
-  var mTabs='<button class="tab active" onclick="setOppMonth(\'Total\',this)">Total</button><button class="tab" onclick="setOppMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setOppMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setOppMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setOppMonth(\'April 2026\',this)">April 2026</button><button class="tab" onclick="setOppMonth(\'May 2026\',this)">May 2026</button>';
+  var _oppMonths=['Total'];var _oppSeen={};
+  _oppsData.forEach(function(o){if(o.month&&!_oppSeen[o.month]){_oppSeen[o.month]=1;_oppMonths.push(o.month);}});
+  _oppMonths.sort(function(a,b){if(a==='Total')return -1;if(b==='Total')return 1;var mo=['January','February','March','April','May','June','July','August','September','October','November','December'];var pa=a.split(' '),pb=b.split(' ');if(pa[1]!==pb[1])return parseInt(pa[1])-parseInt(pb[1]);return mo.indexOf(pa[0])-mo.indexOf(pb[0]);});
+  var mTabs=_oppMonths.map(function(m,i){return '<button class="tab'+(i===0?' active':'')+'" onclick="setOppMonth(\''+m+'\',this)">'+m+'</button>';}).join('');
   document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Opportunities</div><div class="page-sub">2026 · Monthly Incremental Bookings · excl. Industry Lead & IL Managers</div></div></div><div class="tabs" id="opp-month-tabs">'+mTabs+'</div><div id="opp-content"></div></div>';
   renderOppContent();
 }
 function setOppMonth(m,btn){_oppMonth=m;document.querySelectorAll('#opp-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderOppContent();}
 function renderOppContent(){
-  var opps=_oppMonth==='Total'?OPPS_2026:OPPS_2026.filter(function(o){return o.month===_oppMonth;});
+  var opps=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
   var totalBk=opps.reduce(function(s,o){return s+o.bk;},0),nOpps=opps.filter(function(o){return o.bk>0;}).length;
   // Data is pre-filtered to seller plans only (Net New, Agency, Growth, HoCo)
   // SL/IL/IL Managers rows excluded at source except unique-opp cases
@@ -4689,6 +4693,61 @@ function nav(view,btn){
   VIEW_MAP[view]();
 }
 renderOverview();
+
+// ── Live sync from Google Sheet ──
+(function(){
+  var SHEET_URL='https://docs.google.com/spreadsheets/d/1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ/gviz/tq?tqx=out:csv&sheet=Opportunities';
+  var ALIASES={'Allen Hammock':'Edward Hammock','Daniel Madden':'Dan Madden','David Henson bowen':'David Henson Bowen','Jim Wasenius':'James Wasenius','Matt Vignieri':'Matthew Vignieri','Patti Soete':'Patricia Soete','Samuel Benkel':'Sam Benkel','Simon Piper Sales':'Simon Piper','Allie Kandall':'Allie Kendall','Celine Levy':'Celine Nicole Levy','Maura Mcnulty':'Maura McNulty'};
+  function buildEmpMgr(){var m={};EMPLOYEES.forEach(function(e){m[e.n]=e.mgr||'';});return m;}
+  function parseCSV(text){
+    var rows=[];var lines=text.split('\n');
+    lines.forEach(function(line){
+      var row=[],cur='',inQ=false;
+      for(var i=0;i<line.length;i++){
+        var c=line[i];
+        if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
+        else if(c===','&&!inQ){row.push(cur);cur='';}
+        else{cur+=c;}
+      }
+      row.push(cur);
+      rows.push(row);
+    });
+    return rows;
+  }
+  function toInt(v){var n=parseInt(v,10);return isNaN(n)?0:n;}
+  function xlDate(v){
+    if(!v||v==='')return '';
+    // If it looks like an Excel serial number
+    var n=parseFloat(v);
+    if(!isNaN(n)&&n>40000){var d=new Date(Math.round((n-25569)*86400000));return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();}
+    // Otherwise assume already a date string
+    return v;
+  }
+  var empMgr=buildEmpMgr();
+  fetch(SHEET_URL,{cache:'no-cache'})
+    .then(function(r){if(!r.ok)throw new Error('sheet fetch failed');return r.text();})
+    .then(function(text){
+      var rows=parseCSV(text);
+      if(rows.length<2)return;
+      var opps=rows.slice(1).map(function(r){
+        while(r.length<23)r.push('');
+        var emp=r[1].trim(),month=(r[17]||'').trim()+' '+(r[18]||'').trim().replace('.0','');
+        var resolved=ALIASES[emp]||emp;
+        return{
+          plan:r[2].trim(),emp:emp,mgr:empMgr[resolved]||'',
+          opp:r[0].trim(),type:r[19].trim(),book:r[22].trim(),
+          bk:toInt(r[6]),month:month.trim(),
+          closed:xlDate(r[16]),start:xlDate(r[21]),
+          split:r[5]!==''?toInt(r[5]):100
+        };
+      }).filter(function(o){return o.opp&&o.emp;});
+      if(opps.length<10)return; // sanity check
+      _oppsData=opps;
+      // Re-render if currently on opps view
+      if(document.getElementById('opp-content'))renderOppContent();
+    })
+    .catch(function(){/* keep embedded fallback */});
+})();
 
 </script>
 </body>
