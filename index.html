@@ -3300,20 +3300,28 @@ function renderMgrContent() {
 
 
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
-var _attMonth='May 2026',_attPlan='all';
+var _attMonth='May 2026',_attPlan='all',_attRole='all';
 function renderAttainment(){
-  _attMonth='May 2026';_attPlan='all';
+  _attMonth='May 2026';_attPlan='all';_attRole='all';
   var planSet={};Object.keys(ATTAINMENT_DATA).forEach(function(m){ATTAINMENT_DATA[m].forEach(function(e){planSet[e.pl]=1;});});
   var plansList=Object.keys(planSet).filter(function(p){return p!=='CSD'&&p!=='CSD LEAD';}).sort();
   var mTabs='<button class="tab" onclick="setAttMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setAttMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setAttMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setAttMonth(\'April 2026\',this)">April 2026</button><button class="tab active" onclick="setAttMonth(\'May 2026\',this)">May 2026</button>';
   var pTabs='<button class="tab active" onclick="setAttPlan(\'all\',this)">All plans</button>';plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setAttPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';});
-  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – May 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div id="att-content"></div></div>';
+  var rTabs='<button class="tab active" onclick="setAttRole(\'all\',this)">All</button><button class="tab" onclick="setAttRole(\'mgr\',this)">Managers</button><button class="tab" onclick="setAttRole(\'rep\',this)">Non-managers</button>';
+  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – May 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div class="tabs" id="att-role-tabs">'+rTabs+'</div><div id="att-content"></div></div>';
   renderAttContent();
 }
 function setAttMonth(m,btn){_attMonth=m;document.querySelectorAll('#att-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderAttContent();}
 function setAttPlan(p,btn){_attPlan=p;document.querySelectorAll('#att-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderAttContent();}
+function setAttRole(r,btn){_attRole=r;document.querySelectorAll('#att-role-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderAttContent();}
 function renderAttContent(){
-  var all=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){return _attPlan==='all'||e.pl===_attPlan;});
+  var MGR_SET_ATT=(function(){var s={};EMPLOYEES.forEach(function(e){if(e.mgr)s[e.mgr]=true;});return s;})();
+  var all=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){
+    if(_attPlan!=='all'&&e.pl!==_attPlan)return false;
+    if(_attRole==='mgr')return !!MGR_SET_ATT[e.n];
+    if(_attRole==='rep')return !MGR_SET_ATT[e.n];
+    return true;
+  });
   var seen={};all=all.filter(function(e){if(seen[e.n])return false;seen[e.n]=1;return true;});
   var rated=all.filter(function(e){return e.att!==null&&e.att!==undefined;});
   var naList=all.filter(function(e){return e.att===null||e.att===undefined;});
