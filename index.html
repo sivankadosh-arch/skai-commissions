@@ -4513,26 +4513,50 @@ function renderOppContent(){
   _renderOppEmpChart();
 }
 
+function _buildGapsData() {
+  function parseD(s){if(!s)return null;var p=s.split('/');return p.length===3?new Date(parseInt(p[2]),parseInt(p[0])-1,parseInt(p[1])):null;}
+  var SELLER_PLANS={'Agency':1,'Growth':1,'Net New':1,'HoCo':1};
+  var seen={}, result=[];
+  // prefer seller-plan row per opp; fall back to first row
+  var byOpp={};
+  _oppsData.forEach(function(o){
+    if(!o.opp)return;
+    var k=o.opp.trim().toLowerCase();
+    if(!byOpp[k])byOpp[k]=[];
+    byOpp[k].push(o);
+  });
+  Object.keys(byOpp).forEach(function(k){
+    var rows=byOpp[k];
+    var row=rows.filter(function(r){return SELLER_PLANS[r.plan];})[0]||rows[0];
+    var c=parseD(row.closed),s=parseD(row.start);
+    if(!c||!s)return;
+    var gap=Math.round((s-c)/86400000);
+    result.push({opp:row.opp,type:row.type,book:row.book,closed:row.closed,start:row.start,month:row.month,plan:row.plan,gap:gap});
+  });
+  return result;
+}
+
 function renderOppGap() {
   var _gapMonth = 'Total';
   var _gapPlan  = 'all';
 
-  // Build plan list
-  var planSet = {};
-  OPPS_GAP.forEach(function(o){ planSet[o.plan]=1; });
-  var plansList = Object.keys(planSet).sort();
+  var _GAPS_ALL = _buildGapsData();
 
-  var mTabs =
-    '<button class="tab active" onclick="setGapMonth(\'Total\',this)">Total</button>' +
-    '<button class="tab" onclick="setGapMonth(\'January 2026\',this)">January 2026</button>' +
-    '<button class="tab" onclick="setGapMonth(\'February 2026\',this)">February 2026</button>' +
-    '<button class="tab" onclick="setGapMonth(\'March 2026\',this)">March 2026</button>' +
-    '<button class="tab" onclick="setGapMonth(\'April 2026\',this)">April 2026</button>';
+  // Dynamic month tabs
+  var mSeen={}, mList=['Total'];
+  _GAPS_ALL.forEach(function(o){if(o.month&&!mSeen[o.month]){mSeen[o.month]=1;mList.push(o.month);}});
+  var MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  mList.sort(function(a,b){if(a==='Total')return -1;if(b==='Total')return 1;var pa=a.split(' '),pb=b.split(' ');if(pa[1]!==pb[1])return parseInt(pa[1])-parseInt(pb[1]);return MO.indexOf(pa[0])-MO.indexOf(pb[0]);});
+  var mTabs=mList.map(function(m,i){return '<button class="tab'+(i===0?' active':'')+'" onclick="setGapMonth(\''+m+'\',this)">'+m+'</button>';}).join('');
 
-  var pTabs = '<button class="tab active" onclick="setGapPlan(\'all\',this)">All plans</button>';
-  plansList.forEach(function(p){
-    pTabs += '<button class="tab" onclick="setGapPlan(\''+p+'\',this)">'+p+'</button>';
-  });
+  // Dynamic plan tabs
+  var planSet={};
+  _GAPS_ALL.forEach(function(o){if(o.plan)planSet[o.plan]=1;});
+  var plansList=Object.keys(planSet).sort();
+  var pTabs='<button class="tab active" onclick="setGapPlan(\'all\',this)">All plans</button>';
+  plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setGapPlan(\''+p+'\',this)">'+p+'</button>';});
+
+  window._GAPS_ALL = _GAPS_ALL;
 
   document.getElementById('main').innerHTML =
     '<div class="view">' +
@@ -4563,7 +4587,7 @@ function renderGapContent() {
   var m = window._gapMonth || 'Total';
   var pl = window._gapPlan  || 'all';
 
-  var gaps = OPPS_GAP.filter(function(o){
+  var gaps = (window._GAPS_ALL||[]).filter(function(o){
     if(m!=='Total' && o.month!==m) return false;
     if(pl!=='all'  && o.plan!==pl)  return false;
     return true;
