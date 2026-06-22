@@ -2699,7 +2699,7 @@ const OPPS_GAP = [
 ];
 
 var _ovPlanMonth='Total',_ovChartMode='stacked';
-var ytd25=2496122,full25=8542434,rampTotal=100808,rampEmps=[{n:'Larissa Moreira',v:26460},{n:'Roberta Silvana Martins Nahas',v:26000},{n:'Julie Olamit',v:17975},{n:'David Henson Bowen',v:17408},{n:'Michael Keaveny',v:10000},{n:'Paul Wainwright',v:2965}];
+var ytd25=2846629,full25=8542434,rampTotal=108292,rampEmps=[{n:'Larissa Moreira',v:26460},{n:'Roberta Silvana Martins Nahas',v:26000},{n:'Julie Olamit',v:17975},{n:'David Henson Bowen',v:17408},{n:'Michael Keaveny',v:10000},{n:'Paul Wainwright',v:2965},{n:'Peter Phillips',v:7484}];
 
 
 var _csdFilter='all',_csdMonth='Total YTD';
@@ -2733,7 +2733,7 @@ function renderOverview(){
     '<div class="kpi b"><div class="kpi-label">2025 same period</div><div class="kpi-val">'+fm(ytd25)+'</div><div class="kpi-sub">Full 2025: <strong>'+fm(full25)+'</strong><br><span style="color:'+(GT.t>=ytd25?'#406EF1':'#FF8161')+';font-weight:600">'+(GT.t>=ytd25?'&uarr;':'&darr;')+' '+Math.abs(parseFloat(yoy)).toFixed(1)+'% YoY</span></div></div>'+
     '<div class="kpi a"><div class="kpi-label">Ramp payment '+firstM+'&ndash;'+lastM+'</div><div class="kpi-val">'+fm(rampTotal)+'</div><div class="kpi-sub" style="line-height:1.7">'+rampSubLines+'</div></div>'+
     '<div class="kpi a"><div class="kpi-label">Active plans &middot; '+months[n-1].d+'</div><div class="kpi-val">'+lastMonthPlans.length+'</div><div class="kpi-sub" style="line-height:1.6">'+planSubLines+'</div></div>'+
-    '<div class="kpi gr"><div class="kpi-label">Employees &middot; '+months[n-1].d+'</div><div class="kpi-val">'+lastMonthEmps+'</div><div class="kpi-sub" style="line-height:1.6">76 active employees + 1 carryover commission payment (Evandro Carvalho de Sousa)</div></div>'+
+    '<div class="kpi gr"><div class="kpi-label">Employees &middot; '+months[n-1].d+'</div><div class="kpi-val">'+lastMonthEmps+'</div><div class="kpi-sub" style="line-height:1.6">74 active employees</div></div>'+
     '</div>'+
     '<div class="card"><div class="card-header"><div class="card-title">Payments by plan &middot; January &ndash; '+lastM+' '+yr+'</div></div>'+
     '<div class="tabs" id="plan-month-tabs">'+planMonthTabs+'</div>'+
