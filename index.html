@@ -4459,7 +4459,7 @@ function renderOppContent(){
     oppGroupMap[key].push(o);
   });
   var sharedOpps = Object.keys(oppGroupMap).filter(function(k){
-    return oppGroupMap[k].length>1 && k!=='';
+    return k!=='' && oppGroupMap[k].some(function(o){return o.split<100;});
   }).map(function(k){
     var rows=oppGroupMap[k];
     return {opp:rows[0].opp, type:rows[0].type, book:rows[0].book,
