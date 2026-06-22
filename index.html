@@ -4399,10 +4399,17 @@ function renderOpps(){
   renderOppContent();
 }
 function setOppMonth(m,btn){_oppMonth=m;document.querySelectorAll('#opp-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderOppContent();}
+function _filterSellerOpps(arr){
+  var EXCL={'Sales Leadership':1,'Head of Industry':1,'Industry Lead':1};
+  var hasSellerRow={};
+  arr.forEach(function(o){if(!EXCL[o.plan])hasSellerRow[o.opp]=1;});
+  return arr.filter(function(o){return !EXCL[o.plan]||!hasSellerRow[o.opp];});
+}
 function renderOppContent(){
   var opps=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
+  opps=_filterSellerOpps(opps);
   var totalBk=opps.reduce(function(s,o){return s+o.bk;},0),nOpps=opps.filter(function(o){return o.bk>0;}).length;
-  // Data is pre-filtered to seller plans only (Net New, Agency, Growth, HoCo)
+  // Seller plans only (Net New, Agency, Growth, HoCo); SL/IL/HoI shown only if no seller row exists for that opp
   // SL/IL/IL Managers rows excluded at source except unique-opp cases
   var empBk={};
   opps.forEach(function(o){ empBk[o.emp]=(empBk[o.emp]||0)+o.bk; });
