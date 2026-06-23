@@ -6,9 +6,20 @@
 <title>Skai Commission Dashboard 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--blue:#406EF1;--blue-dim:rgba(64,110,241,0.08);--night:#111428;--muted:#878F91;--muted2:#5a6a72;--grey-light:#F3F5F7;--r:10px;--sidebar:220px}
+:root{--blue:#406EF1;--blue-dim:rgba(64,110,241,0.08);--night:#111428;--muted:#878F91;--muted2:#5a6a72;--grey-light:#F3F5F7;--r:10px;--sidebar:220px;--bg:#F3F5F7;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7}
+body.light-mode{--bg:#F3F5F7;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7}
+body.light-mode aside{background:#fff;border-right:1px solid #E8EEF0}
+body.light-mode .brand-name{color:var(--night)}
+body.light-mode .brand-sub{color:var(--muted)}
+body.light-mode .nav-section{color:var(--muted)}
+body.light-mode .nav-btn{color:var(--muted2)}
+body.light-mode .nav-btn:hover{background:var(--grey-light);color:var(--night)}
+body.light-mode .nav-btn.active{background:var(--blue-dim);color:var(--blue)}
+body.light-mode #theme-toggle{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12);color:var(--muted2)}
+body.light-mode #fmt-toggle{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12);color:var(--muted2)}
+body.light-mode .brand{border-bottom-color:#E8EEF0}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F3F5F7;color:var(--night);display:flex;min-height:100vh}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--night);display:flex;min-height:100vh}
 #gate{position:fixed;inset:0;background:#111428;display:flex;align-items:center;justify-content:center;z-index:9999}
 .gate-box{background:#fff;border-radius:16px;padding:40px;width:360px;text-align:center}
 .gate-box h2{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--night)}
@@ -86,9 +97,9 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
   <div class="brand">
     <div class="brand-name">Skai Commissions</div>
     <div class="brand-sub">2026 YTD · January – May</div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Numbers:</span>
-      <button id="fmt-toggle" onclick="toggleFmFull()" style="padding:4px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">Full $</button>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <button id="fmt-toggle" onclick="toggleFmFull()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">Full $</button>
+      <button id="theme-toggle" onclick="toggleTheme()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">☀️ Light</button>
     </div>
   </div>
   <nav>
@@ -119,6 +130,9 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <span style="font-size:15px">⚠️</span>
     <span><strong>May 2026 figures are preliminary</strong> — data has not been finalised and may change.</span>
   </div>
+  <div id="last-updated-bar" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:5px 24px;background:var(--grey-light);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);position:sticky;top:38px;z-index:49">
+    <span id="last-updated-text">Static data · last updated: Jun 23, 2026</span>
+  </div>
   <div id="main"></div>
 </div>
 
@@ -137,6 +151,19 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
   function fm(n){if(!n&&n!==0)return '—';if(_fmFull)return '$'+Math.round(n).toLocaleString();if(Math.abs(n)>=1e6)return '$'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1000)return '$'+Math.round(n/1000)+'K';if(n<0)return '-$'+Math.abs(Math.round(n)).toLocaleString();return '$'+Math.round(n).toLocaleString();}
   function fmFull(n){return '$'+Math.round(n).toLocaleString();}
   function toggleFmFull(){_fmFull=!_fmFull;var btn=document.getElementById('fmt-toggle');btn.textContent=_fmFull?'Show K':'Full $';var active=document.querySelector('.nav-btn.active');if(active)active.click();}
+  function toggleTheme(){var light=document.body.classList.toggle('light-mode');var btn=document.getElementById('theme-toggle');btn.textContent=light?'🌙 Dark':'☀️ Light';}
+  var _lastSync=null;
+  var _liveViews={opps:1,oppnet:1,oppgap:1,attainment:1};
+  function updateLastUpdatedBar(viewKey){
+    var el=document.getElementById('last-updated-text');if(!el)return;
+    if(_liveViews[viewKey]&&_lastSync){
+      el.innerHTML='<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:#4CAF50;display:inline-block"></span>Live data · last synced: '+_lastSync+'</span>';
+    } else if(_liveViews[viewKey]){
+      el.innerHTML='<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:#FFB900;display:inline-block"></span>Live data · syncing…</span>';
+    } else {
+      el.textContent='Static data · last updated: Jun 23, 2026';
+    }
+  }
   function ini(s){return String(s).split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();}
   function mkChart(id,cfg){if(_charts[id]){_charts[id].destroy();delete _charts[id];}var el=document.getElementById(id);if(el)_charts[id]=new Chart(el,cfg);}
 
@@ -5214,6 +5241,7 @@ function nav(view,btn){
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   VIEW_MAP[view]();
+  updateLastUpdatedBar(view);
 }
 renderOverview();
 
@@ -5345,6 +5373,8 @@ function syncFromWebApp(){
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
       _oppsData=opps;
+      var _now=new Date();_lastSync=_now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+_now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      var activeNav=document.querySelector('.nav-btn.active');var activeView=activeNav?activeNav.getAttribute('onclick').match(/nav\('(\w+)'/):null;if(activeView)updateLastUpdatedBar(activeView[1]);
       computeJuneEst(opps, ALIASES);
 
       // ── Build NET_OPP_DATA from Opportunities tab ──────────────────────────
