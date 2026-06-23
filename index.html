@@ -4103,112 +4103,80 @@ function renderMgrContent() {
       '</tr>';
   });
 
-  // ── Detail panel for selected manager ─────────────────────────────
+  // ── Employee drill-down for selected manager ──────────────────────
   function buildDetail(m) {
     if(!m) return '<div style="padding:40px;text-align:center;color:var(--muted2)">Select a manager</div>';
     var attColor = m.att===null?'#878F91':m.att>=100?'#406EF1':m.att>=85?'#669AD2':m.att>=40?'#FFB900':'#FF8161';
     var share = totT>0?(m.t/totT*100).toFixed(1):0;
 
-    var planBadges = Object.keys(m.plans).map(function(p){
-      return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:#406EF118;color:#406EF1;margin:2px;display:inline-block">'+p+' ('+m.plans[p]+')</span>';
-    }).join('');
+    // Build attainment lookup for selected month
+    var attLookup = {};
+    var attMonthKey = _mgrMonth==='Total YTD'?'May 2026':_mgrMonth;
+    (ATTAINMENT_DATA[attMonthKey]||[]).forEach(function(e){ attLookup[e.n]=e.att; });
 
-    var maxTrend = Math.max.apply(null, m.trend.concat([1]));
-    var trendBars = m.trend.map(function(v,i){
-      var h = maxTrend>0?Math.round(v/maxTrend*48):0;
-      var c = i===m.trend.length-1?'#406EF1':'#A2D8EF';
-      return '<div style="flex:1;height:'+h+'px;background:'+c+';border-radius:3px 3px 0 0;align-self:flex-end;min-width:18px"></div>';
-    }).join('');
-    var trendLabels = ['Jan','Feb','Mar','Apr','May'];
+    // Get employees for this manager
+    var teamEmps = EMPLOYEES.filter(function(e){ return e.mgr===m.mgr; })
+      .sort(function(a,b){ return b.t-a.t; });
+
+    var empRows = '';
+    teamEmps.forEach(function(e) {
+      var att = attLookup[e.n];
+      var ac = att===undefined?'#878F91':att>=100?'#406EF1':att>=85?'#669AD2':att>=40?'#FFB900':'#FF8161';
+      var isInactive = INACTIVE_EMPS.has(e.n);
+      var barMax = m.t > 0 ? m.t : 1;
+      var barW = Math.round(e.t/barMax*100);
+      empRows +=
+        '<tr'+(isInactive?' style="opacity:0.55"':'')+'>'+
+        '<td><div style="font-weight:600;font-size:13px;color:var(--night)'+(isInactive?';text-decoration:line-through':'')+'">'+e.n+'</div>'+
+          '<div style="height:3px;background:var(--grey-light);border-radius:2px;margin-top:4px;overflow:hidden">'+
+            '<div style="height:100%;width:'+barW+'%;background:#406EF1;border-radius:2px"></div>'+
+          '</div>'+
+        '</td>'+
+        '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>'+
+        '<td class="num fw">'+fm(e.t)+'</td>'+
+        (e.p24>0?'<td class="num" style="font-size:11px;color:var(--muted2)">'+fm(e.p24)+'</td>':'<td class="num" style="color:var(--muted)">—</td>')+
+        (e.p25>0?'<td class="num" style="font-size:11px;color:var(--muted2)">'+fm(e.p25)+'</td>':'<td class="num" style="color:var(--muted)">—</td>')+
+        '<td class="num" style="font-size:12px;color:var(--blue)">'+fm(e.p26)+'</td>'+
+        '<td class="num fw" style="color:'+ac+'">'+(att!==undefined?att.toFixed(1)+'%':'N/A')+'</td>'+
+        '</tr>';
+    });
 
     var zList = _mgrMonth==='Total YTD'
       ? m.zero_att.filter(function(n){ return !empHasEarnings[n]; })
       : m.zero_att;
-    var zHtml = zList.length ? '<div style="margin-top:12px;padding:10px 12px;background:#FFF4F2;border-radius:6px;border-left:3px solid #FF8161">'+
-      '<div style="font-size:11px;font-weight:700;color:#FF8161;margin-bottom:4px">0% attainment ('+zList.length+')</div>'+
-      '<div style="font-size:11px;color:var(--muted2)">'+zList.map(function(n){
-        return INACTIVE_EMPS.has(n)?'<span style="text-decoration:line-through;color:#FF3B30">'+n+'</span>':n;
-      }).join(', ')+'</div></div>' : '';
 
     return (
-      // Header
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
-        '<div style="display:flex;align-items:center;gap:12px">'+
-          '<div class="av" style="width:44px;height:44px;font-size:15px;background:#406EF1;color:#fff">'+ini(m.mgr)+'</div>'+
-          '<div><div style="font-size:18px;font-weight:700;color:var(--night)">'+m.mgr+'</div>'+
-          '<div style="font-size:12px;color:var(--muted2);margin-top:2px">'+m.hc+' employees · '+share+'% of total payout</div></div>'+
+      // Manager summary header
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--grey-light)">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div class="av" style="width:40px;height:40px;font-size:14px;background:#406EF1;color:#fff">'+ini(m.mgr)+'</div>'+
+          '<div><div style="font-size:16px;font-weight:700;color:var(--night)">'+m.mgr+'</div>'+
+          '<div style="font-size:11px;color:var(--muted2);margin-top:1px">'+m.hc+' employees · '+share+'% of total · avg att: <span style="color:'+attColor+';font-weight:600">'+(m.att!==null?m.att.toFixed(1)+'%':'N/A')+'</span></div></div>'+
         '</div>'+
-        '<div style="text-align:right"><div style="font-size:24px;font-weight:700;color:var(--night)">'+fm(m.t)+'</div>'+
-        '<div style="font-size:11px;color:var(--muted2)">total paid</div></div>'+
-      '</div>'+
-
-      // Stats grid
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg / rep</div>'+
-          '<div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(m.avg)+'</div>'+
-        '</div>'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg attainment</div>'+
-          '<div style="font-size:18px;font-weight:700;color:'+attColor+'">'+(m.att!==null?m.att.toFixed(1)+'%':'N/A')+'</div>'+
-        '</div>'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg pay rate</div>'+
-          '<div style="font-size:18px;font-weight:700;color:var(--night)">'+(m.rate!==null?m.rate.toFixed(2)+'%':'N/A')+'</div>'+
-        '</div>'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#b08400;margin-bottom:4px">Spiff</div>'+
-          '<div style="font-size:18px;font-weight:700;color:'+(m.spiff>0?'#b08400':'var(--muted)')+'">'+fm(m.spiff)+'</div>'+
-          (m.spiff>0?'<div style="font-size:10px;color:var(--muted2);margin-top:3px">'+(m.s24>0?'2024: '+fm(m.s24)+' · ':'')+' 2025: '+fm(m.s25)+' · 2026: '+fm(m.s26)+'</div>':'') +
-        '</div>'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Total bookings</div>'+
-          '<div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(m.booking)+'</div>'+
-        '</div>'+
-        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Ramp</div>'+
-          '<div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(m.ramp||0)+'</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:20px;font-weight:700;color:var(--night)">'+fm(m.t)+'</div>'+
+          (m.spiff>0?'<div style="font-size:11px;color:#b08400">spiff: '+fm(m.spiff)+'</div>':'')+
         '</div>'+
       '</div>'+
 
-      // Pay split bar
-      '<div style="margin-bottom:16px;background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">Pay breakdown</div>'+
-        '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px">'+
-          (m.p24>0?'<div style="flex:'+m.p24+';background:#D0E8F5" title="2024: '+fm(m.p24)+'"></div>':'')+
-          (m.p25>0?'<div style="flex:'+m.p25+';background:#669AD2" title="2025 carryover: '+fm(m.p25)+'"></div>':'')+
-          (m.p26>0?'<div style="flex:'+m.p26+';background:#406EF1" title="2026: '+fm(m.p26)+'"></div>':'')+
-        '</div>'+
-        '<div style="display:flex;gap:14px;margin-top:6px">'+
-          (m.p24>0?'<span style="font-size:11px;color:var(--muted2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#D0E8F5;margin-right:4px"></span>2024: '+fm(m.p24)+'</span>':'')+
-          (m.p25>0?'<span style="font-size:11px;color:var(--muted2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#669AD2;margin-right:4px"></span>2025 carryover: '+fm(m.p25)+'</span>':'')+
-          '<span style="font-size:11px;color:var(--blue)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#406EF1;margin-right:4px"></span>2026: '+fm(m.p26)+'</span>'+
-        '</div>'+
-      '</div>'+
+      // Employee table
+      '<div class="tbl-wrap"><table>'+
+        '<thead><tr>'+
+          '<th>Employee</th><th>Plan</th><th class="num">Total paid</th>'+
+          '<th class="num">2024</th><th class="num">2025</th><th class="num">2026</th>'+
+          '<th class="num">Attainment</th>'+
+        '</tr></thead>'+
+        '<tbody>'+empRows+'</tbody>'+
+      '</table></div>'+
 
-      // Trend (YTD only)
-      (_mgrMonth==='Total YTD'&&m.trend.length?
-        '<div style="margin-bottom:16px;background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px">Monthly trend</div>'+
-          '<div style="display:flex;align-items:flex-end;gap:4px;height:56px">'+trendBars+'</div>'+
-          '<div style="display:flex;gap:4px;margin-top:4px">'+
-            m.trend.map(function(v,i){return '<div style="flex:1;text-align:center;font-size:9px;color:var(--muted)">'+trendLabels[i]+'</div>';}).join('')+
-          '</div>'+
+      (zList.length?
+        '<div style="margin-top:12px;padding:10px 12px;background:#FFF4F2;border-radius:6px;border-left:3px solid #FF8161">'+
+          '<div style="font-size:11px;font-weight:700;color:#FF8161;margin-bottom:4px">0% attainment ('+zList.length+')</div>'+
+          '<div style="font-size:11px;color:var(--muted2)">'+zList.map(function(n){
+            return INACTIVE_EMPS.has(n)?'<span style="text-decoration:line-through;color:#FF3B30">'+n+'</span>':n;
+          }).join(', ')+'</div>'+
         '</div>'
-      :'')+
-
-      // Plans
-      '<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Plans</div>'+planBadges+'</div>'+
-
-      // Top seller
-      (m.top_seller?
-        '<div style="margin-bottom:12px;padding:10px 12px;background:#F0F7FF;border-radius:6px;border-left:3px solid #406EF1">'+
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#185FA5;margin-bottom:3px">Top seller</div>'+
-          '<div style="font-size:13px;font-weight:700;color:var(--night)">'+m.top_seller+' <span style="font-weight:400;color:var(--muted2)">'+fm(m.top_seller_bk)+'</span></div>'+
-        '</div>'
-      :'')+
-
-      zHtml
+      :'')
     );
   }
 
@@ -4246,11 +4214,9 @@ function renderMgrContent() {
 function selectMgr(name) {
   _mgrSelected = name;
   var data = MGR_DATA[_mgrMonth] || [];
-
   var empHasEarnings = {};
   EMPLOYEES.forEach(function(e){ if(e.t > 0) empHasEarnings[e.n] = true; });
   var totT = data.reduce(function(s,m){return s+m.t;},0);
-  var totHC = data.reduce(function(s,m){return s+m.hc;},0);
 
   // Refresh table highlight
   var rows = document.querySelectorAll('#mgr-table-body tr');
@@ -4265,79 +4231,73 @@ function selectMgr(name) {
     if(nameSpan) nameSpan.style.fontWeight = isSelected?'700':'600';
   });
 
-  // Re-render detail panel
   var selMgr = data.find(function(m){return m.mgr===name;});
   if(!selMgr) return;
 
   var attColor = selMgr.att===null?'#878F91':selMgr.att>=100?'#406EF1':selMgr.att>=85?'#669AD2':selMgr.att>=40?'#FFB900':'#FF8161';
   var share = totT>0?(selMgr.t/totT*100).toFixed(1):0;
-  var planBadges = Object.keys(selMgr.plans).map(function(p){
-    return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:#406EF118;color:#406EF1;margin:2px;display:inline-block">'+p+' ('+selMgr.plans[p]+')</span>';
-  }).join('');
-  var maxTrend = Math.max.apply(null, selMgr.trend.concat([1]));
-  var trendBars = selMgr.trend.map(function(v,i){
-    var h = maxTrend>0?Math.round(v/maxTrend*48):0;
-    var c = i===selMgr.trend.length-1?'#406EF1':'#A2D8EF';
-    return '<div style="flex:1;height:'+h+'px;background:'+c+';border-radius:3px 3px 0 0;align-self:flex-end;min-width:18px"></div>';
-  }).join('');
-  var trendLabels = ['Jan','Feb','Mar','Apr','May'];
+
+  var attLookup = {};
+  var attMonthKey = _mgrMonth==='Total YTD'?'May 2026':_mgrMonth;
+  (ATTAINMENT_DATA[attMonthKey]||[]).forEach(function(e){ attLookup[e.n]=e.att; });
+
+  var teamEmps = EMPLOYEES.filter(function(e){ return e.mgr===selMgr.mgr; })
+    .sort(function(a,b){ return b.t-a.t; });
+
+  var empRows = '';
+  teamEmps.forEach(function(e) {
+    var att = attLookup[e.n];
+    var ac = att===undefined?'#878F91':att>=100?'#406EF1':att>=85?'#669AD2':att>=40?'#FFB900':'#FF8161';
+    var isInactive = INACTIVE_EMPS.has(e.n);
+    var barW = Math.round(e.t/Math.max(selMgr.t,1)*100);
+    empRows +=
+      '<tr'+(isInactive?' style="opacity:0.55"':'')+'>'+
+      '<td><div style="font-weight:600;font-size:13px;color:var(--night)'+(isInactive?';text-decoration:line-through':'')+'">'+e.n+'</div>'+
+        '<div style="height:3px;background:var(--grey-light);border-radius:2px;margin-top:4px;overflow:hidden">'+
+          '<div style="height:100%;width:'+barW+'%;background:#406EF1;border-radius:2px"></div>'+
+        '</div>'+
+      '</td>'+
+      '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>'+
+      '<td class="num fw">'+fm(e.t)+'</td>'+
+      (e.p24>0?'<td class="num" style="font-size:11px;color:var(--muted2)">'+fm(e.p24)+'</td>':'<td class="num" style="color:var(--muted)">—</td>')+
+      (e.p25>0?'<td class="num" style="font-size:11px;color:var(--muted2)">'+fm(e.p25)+'</td>':'<td class="num" style="color:var(--muted)">—</td>')+
+      '<td class="num" style="font-size:12px;color:var(--blue)">'+fm(e.p26)+'</td>'+
+      '<td class="num fw" style="color:'+ac+'">'+(att!==undefined?att.toFixed(1)+'%':'N/A')+'</td>'+
+      '</tr>';
+  });
+
   var zList = _mgrMonth==='Total YTD'
     ? selMgr.zero_att.filter(function(n){ return !empHasEarnings[n]; })
     : selMgr.zero_att;
-  var zHtml = zList.length ? '<div style="margin-top:12px;padding:10px 12px;background:#FFF4F2;border-radius:6px;border-left:3px solid #FF8161">'+
-    '<div style="font-size:11px;font-weight:700;color:#FF8161;margin-bottom:4px">0% attainment ('+zList.length+')</div>'+
-    '<div style="font-size:11px;color:var(--muted2)">'+zList.map(function(n){
-      return INACTIVE_EMPS.has(n)?'<span style="text-decoration:line-through;color:#FF3B30">'+n+'</span>':n;
-    }).join(', ')+'</div></div>' : '';
 
   document.getElementById('mgr-detail-panel').innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
-      '<div style="display:flex;align-items:center;gap:12px">'+
-        '<div class="av" style="width:44px;height:44px;font-size:15px;background:#406EF1;color:#fff">'+ini(selMgr.mgr)+'</div>'+
-        '<div><div style="font-size:18px;font-weight:700;color:var(--night)">'+selMgr.mgr+'</div>'+
-        '<div style="font-size:12px;color:var(--muted2);margin-top:2px">'+selMgr.hc+' employees · '+share+'% of total payout</div></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--grey-light)">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<div class="av" style="width:40px;height:40px;font-size:14px;background:#406EF1;color:#fff">'+ini(selMgr.mgr)+'</div>'+
+        '<div><div style="font-size:16px;font-weight:700;color:var(--night)">'+selMgr.mgr+'</div>'+
+        '<div style="font-size:11px;color:var(--muted2);margin-top:1px">'+selMgr.hc+' employees · '+share+'% of total · avg att: <span style="color:'+attColor+';font-weight:600">'+(selMgr.att!==null?selMgr.att.toFixed(1)+'%':'N/A')+'</span></div></div>'+
       '</div>'+
-      '<div style="text-align:right"><div style="font-size:24px;font-weight:700;color:var(--night)">'+fm(selMgr.t)+'</div>'+
-      '<div style="font-size:11px;color:var(--muted2)">total paid</div></div>'+
-    '</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg / rep</div><div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(selMgr.avg)+'</div></div>'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg attainment</div><div style="font-size:18px;font-weight:700;color:'+attColor+'">'+(selMgr.att!==null?selMgr.att.toFixed(1)+'%':'N/A')+'</div></div>'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Avg pay rate</div><div style="font-size:18px;font-weight:700;color:var(--night)">'+(selMgr.rate!==null?selMgr.rate.toFixed(2)+'%':'N/A')+'</div></div>'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#b08400;margin-bottom:4px">Spiff</div><div style="font-size:18px;font-weight:700;color:'+(selMgr.spiff>0?'#b08400':'var(--muted)')+'">'+fm(selMgr.spiff)+'</div>'+(selMgr.spiff>0?'<div style="font-size:10px;color:var(--muted2);margin-top:3px">'+(selMgr.s24>0?'2024: '+fm(selMgr.s24)+' · ':'')+' 2025: '+fm(selMgr.s25)+' · 2026: '+fm(selMgr.s26)+'</div>':'')+'</div>'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Total bookings</div><div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(selMgr.booking)+'</div></div>'+
-      '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">Ramp</div><div style="font-size:18px;font-weight:700;color:var(--night)">'+fm(selMgr.ramp||0)+'</div></div>'+
-    '</div>'+
-    '<div style="margin-bottom:16px;background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">Pay breakdown</div>'+
-      '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px">'+
-        (selMgr.p24>0?'<div style="flex:'+selMgr.p24+';background:#D0E8F5"></div>':'')+
-        (selMgr.p25>0?'<div style="flex:'+selMgr.p25+';background:#669AD2"></div>':'')+
-        (selMgr.p26>0?'<div style="flex:'+selMgr.p26+';background:#406EF1"></div>':'')+
-      '</div>'+
-      '<div style="display:flex;gap:14px;margin-top:6px">'+
-        (selMgr.p24>0?'<span style="font-size:11px;color:var(--muted2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#D0E8F5;margin-right:4px"></span>2024: '+fm(selMgr.p24)+'</span>':'')+
-        (selMgr.p25>0?'<span style="font-size:11px;color:var(--muted2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#669AD2;margin-right:4px"></span>2025 carryover: '+fm(selMgr.p25)+'</span>':'')+
-        '<span style="font-size:11px;color:var(--blue)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#406EF1;margin-right:4px"></span>2026: '+fm(selMgr.p26)+'</span>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:20px;font-weight:700;color:var(--night)">'+fm(selMgr.t)+'</div>'+
+        (selMgr.spiff>0?'<div style="font-size:11px;color:#b08400">spiff: '+fm(selMgr.spiff)+'</div>':'')+
       '</div>'+
     '</div>'+
-    (_mgrMonth==='Total YTD'&&selMgr.trend.length?
-      '<div style="margin-bottom:16px;background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
-        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px">Monthly trend</div>'+
-        '<div style="display:flex;align-items:flex-end;gap:4px;height:56px">'+trendBars+'</div>'+
-        '<div style="display:flex;gap:4px;margin-top:4px">'+
-          selMgr.trend.map(function(v,i){return '<div style="flex:1;text-align:center;font-size:9px;color:var(--muted)">'+trendLabels[i]+'</div>';}).join('')+
-        '</div>'+
+    '<div class="tbl-wrap"><table>'+
+      '<thead><tr>'+
+        '<th>Employee</th><th>Plan</th><th class="num">Total paid</th>'+
+        '<th class="num">2024</th><th class="num">2025</th><th class="num">2026</th>'+
+        '<th class="num">Attainment</th>'+
+      '</tr></thead>'+
+      '<tbody>'+empRows+'</tbody>'+
+    '</table></div>'+
+    (zList.length?
+      '<div style="margin-top:12px;padding:10px 12px;background:#FFF4F2;border-radius:6px;border-left:3px solid #FF8161">'+
+        '<div style="font-size:11px;font-weight:700;color:#FF8161;margin-bottom:4px">0% attainment ('+zList.length+')</div>'+
+        '<div style="font-size:11px;color:var(--muted2)">'+zList.map(function(n){
+          return INACTIVE_EMPS.has(n)?'<span style="text-decoration:line-through;color:#FF3B30">'+n+'</span>':n;
+        }).join(', ')+'</div>'+
       '</div>'
-    :'')+
-    '<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Plans</div>'+planBadges+'</div>'+
-    (selMgr.top_seller?
-      '<div style="margin-bottom:12px;padding:10px 12px;background:#F0F7FF;border-radius:6px;border-left:3px solid #406EF1">'+
-        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#185FA5;margin-bottom:3px">Top seller</div>'+
-        '<div style="font-size:13px;font-weight:700;color:var(--night)">'+selMgr.top_seller+' <span style="font-weight:400;color:var(--muted2)">'+fm(selMgr.top_seller_bk)+'</span></div>'+
-      '</div>'
-    :'')+
-    zHtml;
+    :'');
 }
 
 
