@@ -102,7 +102,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" onclick="nav('breakdown',this)"><span class="icon">🔍</span>Pay breakdown</button>
     <div class="nav-section">Sales</div>
     <button class="nav-btn" onclick="nav('opps',this)"><span class="icon">🤝</span>Opportunities</button>
-    <button class="nav-btn" onclick="nav('oppnet',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Net Revenue</button>
+    <button class="nav-btn" onclick="nav('oppnet',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Net Opportunities Revenue</button>
     <button class="nav-btn" onclick="nav('oppgap',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Close-to-start</button>
     <div class="nav-section">Coming soon</div>
     <button class="nav-btn" style="cursor:default;opacity:0.45" disabled><span class="icon">📋</span>BTR <span style="font-size:9px;font-weight:700;background:rgba(255,185,0,0.25);color:#FFB900;padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">TBA</span></button>
@@ -4902,6 +4902,7 @@ function _buildGapsData() {
 function renderOppNet() {
   var _netMonth = 'Total';
   var _netData = NET_OPP_DATA;
+  window._netExclude0 = false;
 
   // Dynamic month tabs
   var mSeen={}, mList=['Total'];
@@ -4912,10 +4913,15 @@ function renderOppNet() {
 
   document.getElementById('main').innerHTML =
     '<div class="view">' +
-    '<div class="topbar"><div><div class="page-title">Net Revenue</div>' +
+    '<div class="topbar"><div><div class="page-title">Net Opportunities Revenue</div>' +
     '<div class="page-sub">ACV after commission & spiff payouts · unique opportunities</div></div></div>' +
     '<div class="tabs" id="net-month-tabs">'+mTabs+'</div>' +
-    '<div style="display:flex;align-items:center;gap:10px;background:#FFF8E6;border-bottom:2px solid #FFB900;padding:9px 20px;font-size:12.5px;color:#7a5800"><span style="font-size:15px">🚧</span><span><strong>Under construction</strong> — data is still being validated and may change.</span></div>' +
+    '<div style="display:flex;align-items:center;gap:16px;padding:8px 20px;border-bottom:1px solid var(--grey-light)">' +
+      '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px;color:var(--muted2)">' +
+        '<input type="checkbox" id="net-exclude0" onchange="window._netExclude0=this.checked;renderNetContent()" style="cursor:pointer">' +
+        'Exclude 0 ACV opps' +
+      '</label>' +
+    '</div>' +
     '<div id="net-content"></div>' +
     '</div>';
 
@@ -4934,14 +4940,18 @@ function renderNetContent() {
   var m   = window._netMonth || 'Total';
   var src = window._netData  || NET_OPP_DATA;
   var data = m==='Total' ? src : src.filter(function(o){return o.month===m;});
+  if(window._netExclude0) data = data.filter(function(o){return o.acv>0;});
   if(!data.length){
     document.getElementById('net-content').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted2)">No data for this selection.</div>';
     return;
   }
 
   var totalAcv    = data.reduce(function(s,o){return s+o.acv;},0);
+  var totalBk     = data.reduce(function(s,o){return s+(o.bk||0);},0);
   var totalNet    = data.reduce(function(s,o){return s+o.netAcv;},0);
   var totalPayout = data.reduce(function(s,o){return s+o.payout;},0);
+  var totalComm   = data.reduce(function(s,o){return s+(o.comm||0);},0);
+  var totalSpiffs = data.reduce(function(s,o){return s+(o.spiffs||0);},0);
   var avgNetPct   = totalAcv>0?(totalNet/totalAcv*100).toFixed(1):0;
 
   // Type breakdown
@@ -4982,6 +4992,7 @@ function renderNetContent() {
   function netColor(p){return p<70?'#c00':p<85?'#FF8161':p<95?'#FFB900':p<99?'#669AD2':'#406EF1';}
   var rows=sorted.map(function(o,i){
     var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';
+    var hasSpiff = o.spiffs>0, hasComm = o.comm>0;
     return '<tr>' +
       '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>' +
       '<td class="fw" style="font-size:12px;max-width:200px">'+o.opp+'</td>' +
@@ -4989,19 +5000,25 @@ function renderNetContent() {
       '<td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;background:'+bc+'18;color:'+bc+'">'+o.book+'</span></td>' +
       '<td style="font-size:11px;color:var(--muted2)">'+o.month+'</td>' +
       '<td class="num">'+fm(o.acv)+'</td>' +
-      '<td class="num" style="color:#FF8161">'+fm(Math.round(o.payout))+'</td>' +
+      '<td class="num" style="font-size:11px;color:var(--muted2)">'+(o.bk>0?fm(o.bk):'—')+'</td>' +
+      '<td class="num" style="font-size:11px;color:var(--muted2)">'+(hasComm?fm(Math.round(o.comm)):'—')+'</td>' +
+      '<td class="num" style="font-size:11px;color:'+(hasSpiff?'#b08400':'var(--muted)')+'">'+  (hasSpiff?fm(Math.round(o.spiffs)):'—')+'</td>' +
+      '<td class="num fw" style="color:#FF8161">'+fm(Math.round(o.payout))+'</td>' +
       '<td class="num fw">'+fm(o.netAcv)+'</td>' +
       '<td class="num fw" style="color:'+netColor(o.netPct)+'">'+o.netPct+'%</td>' +
-      '<td style="font-size:10px;color:var(--muted2);max-width:140px">'+o.emps+'</td>' +
+      '<td style="font-size:10px;color:var(--muted2);max-width:160px">'+o.emps+'</td>' +
     '</tr>';
   }).join('');
 
   document.getElementById('net-content').innerHTML =
     '<div class="kpi-grid">' +
     '<div class="kpi gr"><div class="kpi-label">Total ACV</div><div class="kpi-val">'+fm(totalAcv)+'</div><div class="kpi-sub">'+data.length+' opps</div></div>' +
+    '<div class="kpi b"><div class="kpi-label">Total Booking</div><div class="kpi-val">'+fm(totalBk)+'</div><div class="kpi-sub">commissionable bookings</div></div>' +
     '<div class="kpi gr"><div class="kpi-label">Net Revenue</div><div class="kpi-val">'+fm(totalNet)+'</div><div class="kpi-sub">after all payouts</div></div>' +
     '<div class="kpi b"><div class="kpi-label">Avg Net %</div><div class="kpi-val">'+avgNetPct+'%</div><div class="kpi-sub">weighted by ACV</div></div>' +
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
+    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
+    '<div class="kpi" style="border-top:3px solid #b08400"><div class="kpi-label">Spiffs</div><div class="kpi-val" style="color:#b08400">'+fm(Math.round(totalSpiffs))+'</div><div class="kpi-sub"></div></div>' +
     '</div>' +
     '<div class="grid2">' +
     '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Net % distribution</div></div>' +
@@ -5011,9 +5028,9 @@ function renderNetContent() {
     '</div>' +
     '<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">All opportunities · sorted by lowest net %</div></div>' +
     '<div class="tbl-wrap"><table>' +
-    '<thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th>Month</th><th class="num">ACV</th><th class="num">Payout</th><th class="num">Net ACV</th><th class="num">Net %</th><th>Employees</th></tr></thead>' +
+    '<thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th>Month</th><th class="num">ACV</th><th class="num">Booking</th><th class="num">Commission</th><th class="num">Spiff</th><th class="num">Total payout</th><th class="num">Net ACV</th><th class="num">Net %</th><th>Employees</th></tr></thead>' +
     '<tbody>'+rows+'</tbody>' +
-    '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
+    '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num">'+fm(totalBk)+'</td><td class="num">'+fm(Math.round(totalComm))+'</td><td class="num">'+fm(Math.round(totalSpiffs))+'</td><td class="num fw" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
     '</table></div></div>';
 
   mkChart('netTypeChart',{type:'bar',data:{
