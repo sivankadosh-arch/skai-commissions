@@ -5219,8 +5219,7 @@ renderOverview();
 
 // ── Live sync: Net Opportunity tab → NET_OPP_DATA ──
 (function(){
-  var SHEET_ID = '1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ';
-  var URL = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&gid=314469001';
+  var netOppUrl = 'https://docs.google.com/spreadsheets/d/1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ/gviz/tq?tqx=out:csv&gid=314469001';
   // Col indices (0-based) in Net Opportunity tab:
   // 0:OppName 1:OppID 2:Type 3:PriceBook 4:CloseDate 5:Month 6:Year
   // 7:ACV 8:Booking 9:Employees 10:Commission 11:OABonus
@@ -5253,7 +5252,7 @@ renderOverview();
     if(!isNaN(n)&&n>40000){var d=new Date(Math.round((n-25569)*86400000));return(d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();}
     return v;
   }
-  fetch(URL,{cache:'no-cache'})
+  fetch(netOppUrl,{cache:'no-cache'})
     .then(function(r){if(!r.ok)throw new Error('net opp fetch failed: '+r.status);return r.text();})
     .then(function(text){
       var rows=parseCSV(text);
