@@ -4120,9 +4120,12 @@ function buildMgrDetailHTML(selMgr, totT, empHasEarnings) {
   var attLookup = {};
   var attMonthKey = _mgrMonth==='Total YTD'?'May 2026':_mgrMonth;
   (ATTAINMENT_DATA[attMonthKey]||[]).forEach(function(e){ attLookup[e.n]=e.att; });
+  // Add CSD attainment (for CSD/CSD LEAD employees not in ATTAINMENT_DATA)
+  var csdAttMonthKey = _mgrMonth==='Total YTD'?'Total YTD':_mgrMonth;
+  (CSD_DATA[csdAttMonthKey]||[]).forEach(function(e){ if(attLookup[e.n]===undefined) attLookup[e.n]=e.att; });
 
   // ── Manager's own personal row ─────────────────────────────────────
-  var mgrEmpEntry = EMPLOYEES.find(function(e){ return e.n===selMgr.mgr; });
+  var mgrEmpEntry = EMPLOYEES.find(function(e){ return e.n.toLowerCase()===selMgr.mgr.toLowerCase(); });
   var personalTableHTML = '';
   if(mgrEmpEntry) {
     var mAtt = attLookup[mgrEmpEntry.n];
@@ -4238,10 +4241,16 @@ function renderMgrContent() {
     _mgrSelected = data[0].mgr;
   }
 
+  // ── CSD att lookup for managers with att:null ─────────────────────
+  var csdMgrAttMap = {};
+  (CSD_DATA[_mgrMonth]||[]).forEach(function(e){ csdMgrAttMap[e.n.toLowerCase()]=e.att; });
+
   // ── Left table rows ────────────────────────────────────────────────
   var tableRows = '';
   data.forEach(function(m) {
-    var attC = m.att===null?'#878F91':m.att>=100?'#406EF1':m.att>=85?'#669AD2':m.att>=40?'#FFB900':'#FF8161';
+    var effAtt = m.att !== null ? m.att : (csdMgrAttMap[m.mgr.toLowerCase()] !== undefined ? csdMgrAttMap[m.mgr.toLowerCase()] : null);
+    var isCsdAtt = m.att === null && effAtt !== null;
+    var attC = effAtt===null?'#878F91':effAtt>=100?'#406EF1':effAtt>=85?'#669AD2':effAtt>=40?'#FFB900':'#FF8161';
     var isSelected = m.mgr === _mgrSelected;
     tableRows +=
       '<tr onclick="selectMgr(\''+m.mgr.replace(/'/g,"\\'")+'\')" style="cursor:pointer;'+(isSelected?'background:#EEF3FF;':'')+'">' +
@@ -4251,7 +4260,7 @@ function renderMgrContent() {
       '</div></td>' +
       '<td class="num" style="font-size:12px;color:var(--muted2)">'+m.hc+'</td>' +
       '<td class="num fw" style="font-size:13px">'+fm(m.t)+'</td>' +
-      '<td class="num" style="font-size:12px;color:'+attC+';font-weight:600">'+(m.att!==null?m.att.toFixed(1)+'%':'—')+'</td>' +
+      '<td class="num" style="font-size:12px;color:'+attC+';font-weight:600">'+(effAtt!==null?effAtt.toFixed(1)+'%'+(isCsdAtt?'<span style="font-size:9px;color:var(--muted);font-weight:400;margin-left:2px">CSD</span>':''):'—')+'</td>' +
       '<td class="num" style="font-size:12px;color:'+(m.spiff>0?'#b08400':'var(--muted)')+'">'+fm(m.spiff)+'</td>' +
       '</tr>';
   });
