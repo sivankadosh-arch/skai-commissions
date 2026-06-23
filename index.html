@@ -6,18 +6,31 @@
 <title>Skai Commission Dashboard 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--blue:#406EF1;--blue-dim:rgba(64,110,241,0.08);--night:#111428;--muted:#878F91;--muted2:#5a6a72;--grey-light:#F3F5F7;--r:10px;--sidebar:220px;--bg:#F3F5F7;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7}
-body.light-mode{--bg:#F3F5F7;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7}
-body.light-mode aside{background:#fff;border-right:1px solid #E8EEF0}
-body.light-mode .brand-name{color:var(--night)}
-body.light-mode .brand-sub{color:var(--muted)}
-body.light-mode .nav-section{color:var(--muted)}
-body.light-mode .nav-btn{color:var(--muted2)}
-body.light-mode .nav-btn:hover{background:var(--grey-light);color:var(--night)}
-body.light-mode .nav-btn.active{background:var(--blue-dim);color:var(--blue)}
-body.light-mode #theme-toggle{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12);color:var(--muted2)}
-body.light-mode #fmt-toggle{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12);color:var(--muted2)}
-body.light-mode .brand{border-bottom-color:#E8EEF0}
+:root{--blue:#406EF1;--blue-dim:rgba(64,110,241,0.08);--night:#111428;--muted:#878F91;--muted2:#5a6a72;--grey-light:#F3F5F7;--r:10px;--sidebar:220px;--bg:#F3F5F7;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7;--text:#111428;--sidebar-bg:#111428;--sidebar-text:rgba(255,255,255,0.6);--sidebar-text-active:#fff;--sidebar-btn-active:rgba(64,110,241,0.25);--sidebar-border:rgba(255,255,255,0.08);--brand-btn-bg:rgba(255,255,255,0.1);--brand-btn-border:rgba(255,255,255,0.2);--brand-btn-color:rgba(255,255,255,0.8)}
+/* Dark mode (default sidebar) stays as is. Light mode = full light */
+body.light-mode{--bg:#F0F2F5;--card:#fff;--border:#E8EEF0;--td-border:#F3F5F7;--text:#111428;--sidebar-bg:#fff;--sidebar-text:var(--muted2);--sidebar-text-active:var(--blue);--sidebar-btn-active:rgba(64,110,241,0.08);--sidebar-border:#E8EEF0;--brand-btn-bg:rgba(0,0,0,0.05);--brand-btn-border:rgba(0,0,0,0.12);--brand-btn-color:var(--muted2)}
+/* Dark mode = full dark */
+body.dark-mode{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--td-border:#22253a;--text:#e8eaf0;--night:#e8eaf0;--muted:#8891a0;--muted2:#7a8494;--grey-light:#22253a;--sidebar-bg:#111428;--sidebar-text:rgba(255,255,255,0.6);--sidebar-text-active:#fff;--sidebar-btn-active:rgba(64,110,241,0.25);--sidebar-border:rgba(255,255,255,0.08);--brand-btn-bg:rgba(255,255,255,0.1);--brand-btn-border:rgba(255,255,255,0.2);--brand-btn-color:rgba(255,255,255,0.8)}
+aside{background:var(--sidebar-bg)!important;border-right:1px solid var(--sidebar-border)}
+.brand{border-bottom-color:var(--sidebar-border)!important}
+.brand-name{color:var(--sidebar-text-active)!important}
+.brand-sub{color:var(--sidebar-text)!important}
+.nav-section{color:var(--sidebar-text)!important;opacity:.7}
+.nav-btn{color:var(--sidebar-text)!important}
+.nav-btn:hover{background:rgba(128,128,128,0.08)!important;color:var(--sidebar-text-active)!important}
+.nav-btn.active{background:var(--sidebar-btn-active)!important;color:var(--sidebar-text-active)!important}
+#fmt-toggle,#theme-toggle,#search-btn,#print-btn{background:var(--brand-btn-bg)!important;border-color:var(--brand-btn-border)!important;color:var(--brand-btn-color)!important}
+body.dark-mode .kpi{background:var(--card)}
+body.dark-mode .card{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+body.dark-mode .tab{background:var(--card);border-color:var(--border);color:var(--muted2)}
+body.dark-mode thead th{border-bottom-color:var(--border);color:var(--muted)}
+body.dark-mode td{border-bottom-color:var(--td-border);color:var(--text)}
+body.dark-mode tr:hover td{background:#1f2235}
+body.dark-mode tr.trow td{background:var(--grey-light);border-top-color:var(--border)}
+body.dark-mode #last-updated-bar{background:var(--card);border-bottom-color:var(--border)}
+body.dark-mode .page-title{color:var(--text)}
+body.dark-mode .kpi-val{color:var(--text)}
+body.dark-mode .card-title{color:var(--text)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--night);display:flex;min-height:100vh}
 #gate{position:fixed;inset:0;background:#111428;display:flex;align-items:center;justify-content:center;z-index:9999}
@@ -181,7 +194,12 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
   function fm(n){if(!n&&n!==0)return '—';if(_fmFull)return '$'+Math.round(n).toLocaleString();if(Math.abs(n)>=1e6)return '$'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1000)return '$'+Math.round(n/1000)+'K';if(n<0)return '-$'+Math.abs(Math.round(n)).toLocaleString();return '$'+Math.round(n).toLocaleString();}
   function fmFull(n){return '$'+Math.round(n).toLocaleString();}
   function toggleFmFull(){_fmFull=!_fmFull;var btn=document.getElementById('fmt-toggle');btn.textContent=_fmFull?'Show K':'Full $';var active=document.querySelector('.nav-btn.active');if(active)active.click();}
-  function toggleTheme(){var light=document.body.classList.toggle('light-mode');var btn=document.getElementById('theme-toggle');btn.textContent=light?'🌙 Dark':'☀️ Light';}
+  function toggleTheme(){
+    var b=document.body,btn=document.getElementById('theme-toggle');
+    if(b.classList.contains('dark-mode')){b.classList.remove('dark-mode');btn.textContent='☀️ Light';}
+    else if(b.classList.contains('light-mode')){b.classList.remove('light-mode');btn.textContent='☀️ Light';}
+    else{b.classList.add('light-mode');btn.textContent='🌙 Dark';}
+  }
 
   // ── Global search ──────────────────────────────────────────────────────────
   function openSearch(){document.getElementById('search-modal').classList.add('open');document.getElementById('search-input').value='';document.getElementById('search-results').innerHTML='<div class="sr-empty">Start typing to search…</div>';setTimeout(function(){document.getElementById('search-input').focus();},50);}
