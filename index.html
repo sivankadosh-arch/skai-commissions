@@ -3269,7 +3269,7 @@ const OPPS_ILM = [
   {plan:"Industry Lead Managers",emp:"Pedro Diogo",mgr:"Dan Madden",opp:"Lovehoney-Upsale-Pilot-Adv-AI Platform-WON",type:"Upsale",book:"Legacy",bk:27368,month:"March 2026",closed:"3/23/2026",start:"3/23/2026",split:100},
 ];
 
-const NET_OPP_DATA = [
+var NET_OPP_DATA = [
   {opp:"Code3-Upsale-Agc-platform-WON",type:"Upsale",book:"Platform",closed:"1/5/2026",month:"January 2026",acv:4500,bk:4500,emps:"Jeff Valente, Scott Merrill",comm:72.9,spiffs:135.0,payout:207.9,netAcv:4292,netPct:95.4},
   {opp:"Cocolab (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/5/2026",month:"January 2026",acv:3124,bk:3124,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:3124,netPct:100.0},
   {opp:"No Makeup Makeup (via Stella Rising)-Upsale-Adv-WON",type:"Upsale",book:"Legacy",closed:"1/5/2026",month:"January 2026",acv:3905,bk:3905,emps:"Jeff Valente, Scott Merrill",comm:0.0,spiffs:0.0,payout:0.0,netAcv:3905,netPct:100.0},
@@ -5216,6 +5216,74 @@ function nav(view,btn){
   VIEW_MAP[view]();
 }
 renderOverview();
+
+// ── Live sync: Net Opportunity tab → NET_OPP_DATA ──
+(function(){
+  var SHEET_ID = '1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ';
+  var URL = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Net+Opportunity';
+  // Col indices (0-based) in Net Opportunity tab:
+  // 0:OppName 1:OppID 2:Type 3:PriceBook 4:CloseDate 5:Month 6:Year
+  // 7:ACV 8:Booking 9:Employees 10:Commission 11:OABonus
+  // 12:BigBet 13:ListPrice 14:H1 15:MultiYear 16:Expansion
+  // 17:PlatformGrowth 18:NewAccount 19:HoCo 20:TotalSpiffs 21:TotalPayout
+  // 22:NetACV 23:NetPct
+  var SPIFF_COLS = [
+    [10,'Commission'],[11,'OA Bonus'],[12,'Big Bet Spiff'],[13,'List Price Spiff'],
+    [14,'H1 Spiff'],[15,'Multi-Year Spiff'],[16,'Expansion Spiff'],
+    [17,'Platform Growth Spiff'],[18,'New Account Spiff'],[19,'HoCo Spiff']
+  ];
+  function parseCSV(text){
+    var rows=[],lines=text.split('\n');
+    lines.forEach(function(line){
+      var row=[],cur='',inQ=false;
+      for(var i=0;i<line.length;i++){
+        var c=line[i];
+        if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
+        else if(c===','&&!inQ){row.push(cur);cur='';}
+        else cur+=c;
+      }
+      row.push(cur);rows.push(row);
+    });
+    return rows;
+  }
+  function toF(v){var n=parseFloat(String(v).replace(/[$,%]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
+  function xlDate(v){
+    if(!v||v==='')return '';
+    var n=parseFloat(v);
+    if(!isNaN(n)&&n>40000){var d=new Date(Math.round((n-25569)*86400000));return(d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();}
+    return v;
+  }
+  fetch(URL,{cache:'no-cache'})
+    .then(function(r){if(!r.ok)throw new Error('net opp fetch failed');return r.text();})
+    .then(function(text){
+      var rows=parseCSV(text);
+      if(rows.length<2)return;
+      var opps=rows.slice(1).map(function(r){
+        while(r.length<24)r.push('');
+        if(!r[0].trim())return null;
+        var acv=toF(r[7]),payout=toF(r[21]),netAcv=toF(r[22]);
+        var rawPct=toF(r[23]);
+        // Net % may come as 0.551 (decimal) or 55.1 (already pct) — normalise
+        var netPct=rawPct>1?Math.round(rawPct*10)/10:Math.round(rawPct*1000)/10;
+        var spiffBreakdown=SPIFF_COLS
+          .filter(function(sc){return toF(r[sc[0]])!==0;})
+          .map(function(sc){return{n:sc[1],amt:toF(r[sc[0]])};});
+        return{
+          opp:r[0].trim(),type:r[2].trim(),book:r[3].trim(),
+          closed:xlDate(r[4]),month:(r[5].trim()+' '+r[6].trim()).trim(),
+          acv:acv,bk:toF(r[8]),emps:r[9].trim(),
+          comm:toF(r[10]),spiffs:toF(r[20]),payout:payout,
+          netAcv:netAcv,netPct:netPct,
+          spiffBreakdown:spiffBreakdown
+        };
+      }).filter(Boolean);
+      if(opps.length<5)return;
+      NET_OPP_DATA=opps;
+      window._netData=opps;
+      if(document.getElementById('net-content'))renderNetContent();
+    })
+    .catch(function(){/* keep embedded fallback */});
+})();
 
 // ── Live sync from Google Sheet ──
 (function(){
