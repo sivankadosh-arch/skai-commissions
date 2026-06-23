@@ -4304,12 +4304,12 @@ function renderMgrContent() {
 
 function selectMgr(name) {
   _mgrSelected = name;
-  var data = MGR_DATA[_mgrMonth] || [];
+  var data = (MGR_DATA[_mgrMonth] || []).filter(function(m){ return mgrMatchesFilter(m, _mgrPlanFilter); });
   var empHasEarnings = {};
   EMPLOYEES.forEach(function(e){ if(e.t > 0) empHasEarnings[e.n] = true; });
   var totT = data.reduce(function(s,m){return s+m.t;},0);
 
-  // Refresh table highlight
+  // Refresh table highlight using filtered data order
   var rows = document.querySelectorAll('#mgr-table-body tr');
   rows.forEach(function(tr, i) {
     var m = data[i];
