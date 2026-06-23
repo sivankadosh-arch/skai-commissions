@@ -4946,17 +4946,25 @@ function renderNetContent() {
     return;
   }
 
-  var totalAcv    = data.reduce(function(s,o){return s+o.acv;},0);
-  var totalBk     = data.reduce(function(s,o){return s+(o.bk||0);},0);
-  var totalNet    = data.reduce(function(s,o){return s+o.netAcv;},0);
-  var totalPayout = data.reduce(function(s,o){return s+o.payout;},0);
-  var totalComm   = data.reduce(function(s,o){return s+(o.comm||0);},0);
-  var totalSpiffs = data.reduce(function(s,o){return s+(o.spiffs||0);},0);
+  // Deduplicate by opp+closed for ACV/Booking (each deal counted once)
+  var _seenOpp = {};
+  var uniqueOpps = data.filter(function(o){
+    var k = o.opp + '|' + (o.closed||'');
+    if(_seenOpp[k]) return false;
+    _seenOpp[k] = true;
+    return true;
+  });
+  var totalAcv    = uniqueOpps.reduce(function(s,o){return s+o.acv;},0);
+  var totalBk     = uniqueOpps.reduce(function(s,o){return s+(o.bk||0);},0);
+  var totalPayout = uniqueOpps.reduce(function(s,o){return s+o.payout;},0);
+  var totalComm   = uniqueOpps.reduce(function(s,o){return s+(o.comm||0);},0);
+  var totalSpiffs = uniqueOpps.reduce(function(s,o){return s+(o.spiffs||0);},0);
+  var totalNet    = totalAcv - totalPayout;
   var avgNetPct   = totalAcv>0?(totalNet/totalAcv*100).toFixed(1):0;
 
   // Type breakdown
   var TYPE_C={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Transfer':'#878F91'};
-  var byType={};data.forEach(function(o){if(!byType[o.type])byType[o.type]={acv:0,net:0};byType[o.type].acv+=o.acv;byType[o.type].net+=o.netAcv;});
+  var byType={};uniqueOpps.forEach(function(o){if(!byType[o.type])byType[o.type]={acv:0,net:0};byType[o.type].acv+=o.acv;byType[o.type].net+=o.acv-o.payout;});
   var typeKeys=Object.keys(byType).sort(function(a,b){return byType[b].acv-byType[a].acv;});
 
   // Net % distribution buckets
