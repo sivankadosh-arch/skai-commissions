@@ -5220,7 +5220,7 @@ renderOverview();
 // ── Live sync: Net Opportunity tab → NET_OPP_DATA ──
 (function(){
   var SHEET_ID = '1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ';
-  var URL = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Net+Opportunity';
+  var URL = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Net%20Opportunity';
   // Col indices (0-based) in Net Opportunity tab:
   // 0:OppName 1:OppID 2:Type 3:PriceBook 4:CloseDate 5:Month 6:Year
   // 7:ACV 8:Booking 9:Employees 10:Commission 11:OABonus
@@ -5228,7 +5228,7 @@ renderOverview();
   // 17:PlatformGrowth 18:NewAccount 19:HoCo 20:TotalSpiffs 21:TotalPayout
   // 22:NetACV 23:NetPct
   var SPIFF_COLS = [
-    [10,'Commission'],[11,'OA Bonus'],[12,'Big Bet Spiff'],[13,'List Price Spiff'],
+    [11,'OA Bonus'],[12,'Big Bet Spiff'],[13,'List Price Spiff'],
     [14,'H1 Spiff'],[15,'Multi-Year Spiff'],[16,'Expansion Spiff'],
     [17,'Platform Growth Spiff'],[18,'New Account Spiff'],[19,'HoCo Spiff']
   ];
@@ -5246,7 +5246,7 @@ renderOverview();
     });
     return rows;
   }
-  function toF(v){var n=parseFloat(String(v).replace(/[$,%]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
+  function toF(v){var n=parseFloat(String(v).replace(/[$, ]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
   function xlDate(v){
     if(!v||v==='')return '';
     var n=parseFloat(v);
@@ -5254,16 +5254,18 @@ renderOverview();
     return v;
   }
   fetch(URL,{cache:'no-cache'})
-    .then(function(r){if(!r.ok)throw new Error('net opp fetch failed');return r.text();})
+    .then(function(r){if(!r.ok)throw new Error('net opp fetch failed: '+r.status);return r.text();})
     .then(function(text){
       var rows=parseCSV(text);
-      if(rows.length<2)return;
+      if(rows.length<2){console.warn('Net Opp fetch: too few rows',rows.length);return;}
+      // Log first data row to help debug column alignment
+      console.log('Net Opp fetch: first row sample',rows[1]);
       var opps=rows.slice(1).map(function(r){
         while(r.length<24)r.push('');
         if(!r[0].trim())return null;
         var acv=toF(r[7]),payout=toF(r[21]),netAcv=toF(r[22]);
         var rawPct=toF(r[23]);
-        // Net % may come as 0.551 (decimal) or 55.1 (already pct) — normalise
+        // Net % comes as decimal (0.551) from gviz → convert to 55.1
         var netPct=rawPct>1?Math.round(rawPct*10)/10:Math.round(rawPct*1000)/10;
         var spiffBreakdown=SPIFF_COLS
           .filter(function(sc){return toF(r[sc[0]])!==0;})
@@ -5277,12 +5279,13 @@ renderOverview();
           spiffBreakdown:spiffBreakdown
         };
       }).filter(Boolean);
-      if(opps.length<5)return;
+      if(opps.length<5){console.warn('Net Opp fetch: too few opps after parse',opps.length);return;}
+      console.log('Net Opp fetch: loaded',opps.length,'opps. Mars Wrigley sample:',opps.find(function(o){return o.opp.indexOf('Mars Wrigley')>=0;}));
       NET_OPP_DATA=opps;
       window._netData=opps;
       if(document.getElementById('net-content'))renderNetContent();
     })
-    .catch(function(){/* keep embedded fallback */});
+    .catch(function(e){console.error('Net Opp fetch error:',e);});
 })();
 
 // ── Live sync from Google Sheet ──
