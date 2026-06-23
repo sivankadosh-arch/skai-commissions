@@ -2991,6 +2991,33 @@ const OPPS_2026 = [
   {plan:"Growth",emp:"Yvonne Morel",mgr:"Jim Wasenius",opp:"HEARST Magazines-Upsale-Adv-platform-WON-WON",type:"Upsale",book:"Platform",bk:8100,month:"March 2026",closed:"3/4/2026",start:"2/1/2026",split:100}
 ];
 var _oppsData = OPPS_2026;
+
+// Compute June (est.) attainment from any opps array + May baseline
+function computeJuneEst(oppsArr, aliasMap) {
+  var SELLER_PLANS_ATT={'Agency':1,'Growth':1,'Net New':1,'HoCo':1};
+  var aliasOf = aliasMap || {};
+  var ytdBk={}, junBk={};
+  oppsArr.forEach(function(o){
+    if(!SELLER_PLANS_ATT[o.plan]||o.bk<=0)return;
+    var res=aliasOf[o.emp]||o.emp;
+    if(o.month==='June 2026'){junBk[res]=(junBk[res]||0)+o.bk;}
+    else{ytdBk[res]=(ytdBk[res]||0)+o.bk;}
+  });
+  var mayData=ATTAINMENT_DATA['May 2026']||[];
+  var junEst=[];
+  mayData.forEach(function(e){
+    if(e.att===null||e.att===undefined)return;
+    var ytd=ytdBk[e.n]||0;
+    var jun=junBk[e.n]||0;
+    var junAtt=ytd>0?Math.round(e.att*(ytd+jun)/ytd*10)/10:e.att;
+    junEst.push({n:e.n,pl:e.pl,mgr:e.mgr,att:junAtt});
+  });
+  junEst.sort(function(a,b){return b.att-a.att;});
+  if(junEst.length>0)ATTAINMENT_DATA['June 2026']=junEst;
+}
+
+// Run immediately with embedded data so June tab is available on first load
+computeJuneEst(OPPS_2026);
 const OPPS_SL = [
   {plan:"Sales Leadership",emp:"Ashley Jenkins",mgr:"",opp:"US Craft Brands LLC-Net-New-Pilot-Adv-platform-WON",type:"Net-New",book:"Platform",bk:22853,month:"January 2026",closed:"1/27/2026",start:"3/1/2026",split:100},
   {plan:"Sales Leadership",emp:"Ashley Jenkins",mgr:"",opp:"TaylorMade Golf-Net-New-Adv-platform-WON",type:"Net-New",book:"Platform",bk:83750,month:"January 2026",closed:"1/28/2026",start:"3/1/2026",split:100},
@@ -5157,28 +5184,7 @@ renderOverview();
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
       _oppsData=opps;
-      // Build June (est.) attainment: derive quota from May baseline + add June bookings
-      var SELLER_PLANS_ATT={'Agency':1,'Growth':1,'Net New':1,'HoCo':1};
-      var ytdBk={},junBk={},empPlan={},empMgrMap={};
-      opps.forEach(function(o){
-        if(!SELLER_PLANS_ATT[o.plan]||o.bk<=0)return;
-        var res=ALIASES[o.emp]||o.emp;
-        empPlan[res]=o.plan;empMgrMap[res]=o.mgr;
-        if(o.month==='June 2026'){junBk[res]=(junBk[res]||0)+o.bk;}
-        else{ytdBk[res]=(ytdBk[res]||0)+o.bk;}
-      });
-      var mayData=ATTAINMENT_DATA['May 2026']||[];
-      var junEst=[];
-      mayData.forEach(function(e){
-        if(e.att===null||e.att===undefined)return;
-        var ytd=ytdBk[e.n]||0;
-        var jun=junBk[e.n]||0;
-        // If we have ytd bookings, scale May att proportionally; otherwise keep May att as-is
-        var junAtt=ytd>0?Math.round(e.att*(ytd+jun)/ytd*10)/10:e.att;
-        junEst.push({n:e.n,pl:e.pl,mgr:e.mgr,att:junAtt});
-      });
-      junEst.sort(function(a,b){return b.att-a.att;});
-      if(junEst.length>0)ATTAINMENT_DATA['June 2026']=junEst;
+      computeJuneEst(opps, ALIASES);
       // Re-render active views
       if(document.getElementById('opp-content'))renderOppContent();
       if(document.getElementById('att-content')){
