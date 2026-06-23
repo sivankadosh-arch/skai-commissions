@@ -5397,10 +5397,8 @@ function syncFromWebApp(){
 
       // Re-render active views
       if(document.getElementById('opp-content'))renderOppContent();
-      if(document.getElementById('att-content')){
-        // Rebuild month tabs to include June tab if now available
-        renderAttainment();
-      }
+      if(document.getElementById('att-content'))renderAttainment();
+      if(document.getElementById('gap-content'))renderOppGap();
     })
     .catch(function(e){console.error('Opportunities fetch error:',e);});
 }
