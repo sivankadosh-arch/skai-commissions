@@ -4032,7 +4032,23 @@ const MGR_DATA = {
 
 
 
-var _mgrMonth = 'Total YTD';
+var _mgrMonth = 'Total YTD', _mgrPlanFilter = 'all';
+var _MGR_PLAN_GROUPS = {
+  sales: {'Agency':1,'Growth':1,'Net New':1,'HoCo':1,'Sales Leadership':1},
+  il:    {'Industry Lead 2025':1,'Head of Industry 2025':1,'Industry Lead':1,'Head of Industry':1},
+  csd:   {'CSD':1,'CSD LEAD':1}
+};
+function mgrMatchesFilter(m, f) {
+  if(f==='all') return true;
+  return Object.keys(m.plans).some(function(p){ return !!_MGR_PLAN_GROUPS[f][p]; });
+}
+function setMgrPlanFilter(f, btn) {
+  _mgrPlanFilter = f;
+  document.querySelectorAll('#mgr-plan-filter-tabs .tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  _mgrSelected = null;
+  renderMgrContent();
+}
 
 function renderManagers() {
   _mgrMonth = 'Total YTD';
@@ -4044,11 +4060,19 @@ function renderManagers() {
     '<button class="tab" onclick="setMgrMonth(\'April 2026\',this)">April 2026</button>' +
     '<button class="tab" onclick="setMgrMonth(\'May 2026\',this)">May 2026</button>';
 
+  _mgrPlanFilter = 'all';
+  var pFilterTabs =
+    '<button class="tab active" onclick="setMgrPlanFilter(\'all\',this)">All</button>' +
+    '<button class="tab" onclick="setMgrPlanFilter(\'sales\',this)">Sales</button>' +
+    '<button class="tab" onclick="setMgrPlanFilter(\'il\',this)">IL / HOI</button>' +
+    '<button class="tab" onclick="setMgrPlanFilter(\'csd\',this)">CSD</button>';
+
   document.getElementById('main').innerHTML =
     '<div class="view">' +
     '<div class="topbar"><div><div class="page-title">Manager rollup</div>' +
     '<div class="page-sub">Team performance · payment · attainment · pay rate · spiff · January – May 2026</div></div></div>' +
     '<div class="tabs" id="mgr-month-tabs">' + mTabs + '</div>' +
+    '<div class="tabs" id="mgr-plan-filter-tabs">' + pFilterTabs + '</div>' +
     '<div id="mgr-content"></div>' +
     '</div>';
   renderMgrContent();
@@ -4064,7 +4088,7 @@ function setMgrMonth(m, btn) {
 var _mgrSelected = null;
 
 function renderMgrContent() {
-  var data = MGR_DATA[_mgrMonth] || [];
+  var data = (MGR_DATA[_mgrMonth] || []).filter(function(m){ return mgrMatchesFilter(m, _mgrPlanFilter); });
   if (!data.length) {
     document.getElementById('mgr-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted2)">No data.</div>';
     return;
