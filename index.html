@@ -4063,9 +4063,9 @@ function renderManagers() {
   _mgrPlanFilter = 'all';
   var pFilterTabs =
     '<button class="tab active" onclick="setMgrPlanFilter(\'all\',this)">All</button>' +
-    '<button class="tab" onclick="setMgrPlanFilter(\'sales\',this)">Sales</button>' +
-    '<button class="tab" onclick="setMgrPlanFilter(\'il\',this)">IL / HOI</button>' +
-    '<button class="tab" onclick="setMgrPlanFilter(\'csd\',this)">CSD</button>';
+    '<button class="tab" onclick="setMgrPlanFilter(\'sales\',this)">Sales Managers</button>' +
+    '<button class="tab" onclick="setMgrPlanFilter(\'il\',this)">IL Leads</button>' +
+    '<button class="tab" onclick="setMgrPlanFilter(\'csd\',this)">CSL</button>';
 
   document.getElementById('main').innerHTML =
     '<div class="view">' +
@@ -5202,12 +5202,12 @@ renderOverview();
       var mayData=ATTAINMENT_DATA['May 2026']||[];
       var junEst=[];
       mayData.forEach(function(e){
-        if(!e.att||e.att<=0)return;
+        if(e.att===null||e.att===undefined)return;
         var ytd=ytdBk[e.n]||0;
-        if(ytd<=0)return;
-        var quota=ytd/(e.att/100);
-        var totalBk=ytd+(junBk[e.n]||0);
-        junEst.push({n:e.n,pl:e.pl,mgr:e.mgr,att:Math.round(totalBk/quota*1000)/10});
+        var jun=junBk[e.n]||0;
+        // If we have ytd bookings, scale May att proportionally; otherwise keep May att as-is
+        var junAtt=ytd>0?Math.round(e.att*(ytd+jun)/ytd*10)/10:e.att;
+        junEst.push({n:e.n,pl:e.pl,mgr:e.mgr,att:junAtt});
       });
       junEst.sort(function(a,b){return b.att-a.att;});
       if(junEst.length>0)ATTAINMENT_DATA['June 2026']=junEst;
