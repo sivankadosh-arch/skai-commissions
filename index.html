@@ -5217,8 +5217,10 @@ function nav(view,btn){
 }
 renderOverview();
 
-// ── Live sync: Net Opportunity tab → NET_OPP_DATA ──
-(function(){
+// ── Net Opportunity tab fetch removed — NET_OPP_DATA is now built live
+// from the Opportunities tab fetch below (same sheet, already accessible).
+// ──
+if(false)(function(){
   var netOppUrl = 'https://docs.google.com/spreadsheets/d/1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ/gviz/tq?tqx=out:csv&gid=314469001';
   // Col indices (0-based) in Net Opportunity tab:
   // 0:OppName 1:OppID 2:Type 3:PriceBook 4:CloseDate 5:Month 6:Year
@@ -5323,8 +5325,9 @@ renderOverview();
       var rows=parseCSV(text);
       if(rows.length<2)return;
       var rawRows=rows.slice(1);
+      function toF2(v){var n=parseFloat(String(v).replace(/[$, ]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
       var opps=rawRows.map(function(r){
-        while(r.length<23)r.push('');
+        while(r.length<35)r.push('');
         var emp=r[1].trim(),month=(r[17]||'').trim()+' '+(r[18]||'').trim().replace('.0','');
         var resolved=ALIASES[emp]||emp;
         return{
@@ -5332,12 +5335,72 @@ renderOverview();
           opp:r[0].trim(),type:r[19].trim(),book:r[22].trim(),
           bk:toInt(r[6]),month:month.trim(),
           closed:xlDate(r[16]),start:xlDate(r[21]),
-          split:r[5]!==''?toInt(r[5]):100
+          split:r[5]!==''?toInt(r[5]):100,
+          // financial cols
+          acv:toF2(r[15]),comm:toF2(r[13]),oaBonus:toF2(r[14]),
+          bbSpiff:toF2(r[26]),lpSpiff:toF2(r[27]),h1Spiff:toF2(r[29]),
+          mySpiff:toF2(r[30]),exSpiff:toF2(r[31]),pgSpiff:toF2(r[32]),
+          naSpiff:toF2(r[33]),hcSpiff:toF2(r[34])
         };
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
       _oppsData=opps;
       computeJuneEst(opps, ALIASES);
+
+      // ── Build NET_OPP_DATA from Opportunities tab ──────────────────────────
+      var SPIFF_NAMES=[['bbSpiff','Big Bet Spiff'],['lpSpiff','List Price Spiff'],
+        ['h1Spiff','H1 Spiff'],['mySpiff','Multi-Year Spiff'],['exSpiff','Expansion Spiff'],
+        ['pgSpiff','Platform Growth Spiff'],['naSpiff','New Account Spiff'],['hcSpiff','HoCo Spiff'],
+        ['oaBonus','OA Bonus']];
+      var byOpp={};
+      opps.forEach(function(r){
+        var k=r.opp;
+        if(!byOpp[k]) byOpp[k]={opp:r.opp,type:r.type,book:r.book,closed:r.closed,month:r.month,
+          acv:r.acv,bk:0,emps:[],comm:0,spiffs:0,
+          bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0,oa:0};
+        var g=byOpp[k];
+        if(r.emp&&g.emps.indexOf(r.emp)<0)g.emps.push(r.emp);
+        // booking: dedupe by emp (each employee row has their split-adjusted bk)
+        g.bk+=r.bk;
+        g.comm+=r.comm; g.oa+=r.oaBonus;
+        g.bb+=r.bbSpiff; g.lp+=r.lpSpiff; g.h1+=r.h1Spiff;
+        g.my+=r.mySpiff; g.ex+=r.exSpiff; g.pg+=r.pgSpiff;
+        g.na+=r.naSpiff; g.hc+=r.hcSpiff;
+      });
+      // Deduplicate bk: the Opportunities tab has one row per employee per opp,
+      // all carrying the full opp ACV/bk — take from first row only
+      var _seenBk={};
+      opps.forEach(function(r){
+        if(!_seenBk[r.opp]){_seenBk[r.opp]=r.acv;}
+      });
+      var liveNetOpp=Object.values(byOpp).map(function(g){
+        var totalSpiffs=g.bb+g.lp+g.h1+g.my+g.ex+g.pg+g.na+g.hc+g.oa;
+        var payout=g.comm+totalSpiffs;
+        var acv=_seenBk[g.opp]||g.acv;
+        var netAcv=acv-payout;
+        var netPct=acv>0?Math.round((netAcv/acv)*1000)/10:0;
+        var spiffBreakdown=SPIFF_NAMES.filter(function(s){return g[s[0].replace('Spiff','').replace('oaBonus','oa')]!==0||g[s[0]]!==0;}).map(function(s){
+          var key=s[0]==='oaBonus'?'oa':s[0].replace('Spiff','');
+          // map back to g properties
+          var keyMap={bbSpiff:'bb',lpSpiff:'lp',h1Spiff:'h1',mySpiff:'my',exSpiff:'ex',pgSpiff:'pg',naSpiff:'na',hcSpiff:'hc',oaBonus:'oa'};
+          var amt=g[keyMap[s[0]]||s[0]];
+          return amt?{n:s[1],amt:Math.round(amt*100)/100}:null;
+        }).filter(Boolean);
+        return{
+          opp:g.opp,type:g.type,book:g.book,closed:g.closed,month:g.month,
+          acv:acv,bk:acv,emps:g.emps.join(', '),
+          comm:Math.round(g.comm*100)/100,spiffs:Math.round(totalSpiffs*100)/100,
+          payout:Math.round(payout*100)/100,
+          netAcv:Math.round(netAcv),netPct:netPct,
+          spiffBreakdown:spiffBreakdown
+        };
+      }).sort(function(a,b){return a.closed>b.closed?1:-1;});
+      if(liveNetOpp.length>0){
+        NET_OPP_DATA=liveNetOpp;
+        window._netData=liveNetOpp;
+        if(document.getElementById('net-content'))renderNetContent();
+      }
+
       // Re-render active views
       if(document.getElementById('opp-content'))renderOppContent();
       if(document.getElementById('att-content')){
