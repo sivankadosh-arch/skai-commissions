@@ -4845,14 +4845,13 @@ function renderOppContent(){
           '<td style="font-size:11px;color:var(--muted2)">'+r.plan+'</td>'+
           '<td class="num">'+fm(r.bk)+'</td>'+
           '<td class="num" style="font-size:11px;color:var(--muted2)">'+r.month+'</td>'+
-          (i===0?'<td class="num fw" style="color:#406EF1;vertical-align:top" rowspan="'+g.reps.length+'">'+fm(g.total)+'</td>':'')+
           '</tr>';
       });
     });
     sharedHtml='<div class="card"><div class="card-header">'+
-      '<div class="card-title">Shared opportunities · same opp credited to multiple sellers</div></div>'+
+      '<div class="card-title">Shared opportunities · Split only</div></div>'+
       '<div class="tbl-wrap"><table>'+
-      '<thead><tr><th>Opportunity</th><th>Employee</th><th>Plan</th><th class="num">Bookings</th><th>Month</th><th class="num">Total</th></tr></thead>'+
+      '<thead><tr><th>Opportunity</th><th>Employee</th><th>Plan</th><th class="num">Bookings</th><th>Month</th></tr></thead>'+
       '<tbody>'+sharedRows+'</tbody>'+
       '</table></div></div>';
   }
