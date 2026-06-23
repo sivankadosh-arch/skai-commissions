@@ -72,6 +72,26 @@ tr.trow td{font-weight:600;background:#F3F5F7;border-top:1.5px solid #E8EEF0}
 .fw{font-weight:600}
 .tbl-wrap{overflow-x:auto;max-height:520px;overflow-y:auto}
 .bar{height:4px;background:#F3F5F7;border-radius:2px;margin-top:4px;overflow:hidden}
+/* Search modal */
+#search-modal{display:none;position:fixed;inset:0;background:rgba(17,20,40,0.55);z-index:999;align-items:flex-start;justify-content:center;padding-top:80px}
+#search-modal.open{display:flex}
+#search-box{background:#fff;border-radius:14px;width:600px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.18);overflow:hidden}
+#search-input{width:100%;padding:16px 20px;font-size:16px;border:none;outline:none;border-bottom:1.5px solid #E8EEF0;color:var(--night)}
+#search-results{max-height:420px;overflow-y:auto}
+.sr-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;border-bottom:1px solid #F3F5F7;transition:background .1s}
+.sr-item:hover{background:#F3F5F7}
+.sr-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.sr-main{font-size:13px;font-weight:600;color:var(--night)}
+.sr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.sr-empty{padding:24px 20px;text-align:center;font-size:13px;color:var(--muted)}
+/* Print styles */
+@media print{
+  aside,#draft-banner,#last-updated-bar,#search-modal,#print-btn,#search-btn{display:none!important}
+  .main-wrap{margin-left:0!important}
+  .tbl-wrap{max-height:none!important;overflow:visible!important}
+  .card{box-shadow:none!important;break-inside:avoid}
+  body{background:#fff!important}
+}
 .barf{height:100%;background:var(--blue);border-radius:2px}
 .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
 .rk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;background:#F3F5F7;color:var(--muted)}
@@ -100,6 +120,8 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <div style="margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <button id="fmt-toggle" onclick="toggleFmFull()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">Full $</button>
       <button id="theme-toggle" onclick="toggleTheme()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">☀️ Light</button>
+      <button id="search-btn" onclick="openSearch()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">🔍 Search</button>
+      <button id="print-btn" onclick="window.print()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">🖨️ PDF</button>
     </div>
   </div>
   <nav>
@@ -124,6 +146,14 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" style="cursor:default;opacity:0.45" disabled><span class="icon">📋</span>BTR <span style="font-size:9px;font-weight:700;background:rgba(255,185,0,0.25);color:#FFB900;padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">TBA</span></button>
   </nav>
 </aside>
+
+<!-- Search modal -->
+<div id="search-modal" onclick="if(event.target===this)closeSearch()">
+  <div id="search-box">
+    <input id="search-input" type="text" placeholder="🔍  Search employee, opportunity, manager…" oninput="runSearch(this.value)" onkeydown="searchKey(event)" autocomplete="off">
+    <div id="search-results"><div class="sr-empty">Start typing to search…</div></div>
+  </div>
+</div>
 
 <div class="main-wrap">
   <div id="draft-banner" style="display:flex;align-items:center;gap:10px;background:#FFF8E6;border-bottom:2px solid #FFB900;padding:9px 20px;font-size:12.5px;color:#7a5800;position:sticky;top:0;z-index:50">
@@ -152,6 +182,42 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
   function fmFull(n){return '$'+Math.round(n).toLocaleString();}
   function toggleFmFull(){_fmFull=!_fmFull;var btn=document.getElementById('fmt-toggle');btn.textContent=_fmFull?'Show K':'Full $';var active=document.querySelector('.nav-btn.active');if(active)active.click();}
   function toggleTheme(){var light=document.body.classList.toggle('light-mode');var btn=document.getElementById('theme-toggle');btn.textContent=light?'🌙 Dark':'☀️ Light';}
+
+  // ── Global search ──────────────────────────────────────────────────────────
+  function openSearch(){document.getElementById('search-modal').classList.add('open');document.getElementById('search-input').value='';document.getElementById('search-results').innerHTML='<div class="sr-empty">Start typing to search…</div>';setTimeout(function(){document.getElementById('search-input').focus();},50);}
+  function closeSearch(){document.getElementById('search-modal').classList.remove('open');}
+  document.addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openSearch();}if(e.key==='Escape')closeSearch();});
+
+  function searchKey(e){
+    if(e.key==='Enter'){var first=document.querySelector('.sr-item');if(first)first.click();}
+  }
+
+  function runSearch(q){
+    q=(q||'').trim().toLowerCase();
+    var el=document.getElementById('search-results');
+    if(!q){el.innerHTML='<div class="sr-empty">Start typing to search…</div>';return;}
+    var results=[];
+    // Employees
+    EMPLOYEES.forEach(function(e){
+      if(e.n.toLowerCase().indexOf(q)>=0||( e.mgr&&e.mgr.toLowerCase().indexOf(q)>=0)||e.pl.toLowerCase().indexOf(q)>=0){
+        results.push({type:'Employee',tag:'#406EF1',main:e.n,sub:e.pl+(e.mgr?' · '+e.mgr:''),action:function(name){return function(){closeSearch();var btns=document.querySelectorAll('.nav-btn');btns.forEach(function(b){if(b.textContent.indexOf('Top earners')>=0)b.click();});setTimeout(function(){var inputs=document.querySelectorAll('input[type=text]');inputs.forEach(function(i){if(i.placeholder&&i.placeholder.toLowerCase().indexOf('search')>=0){i.value=name;i.dispatchEvent(new Event('input'));}});},300);};}(e.n)});
+      }
+    });
+    // Opportunities from live data
+    var seen={};(_oppsData||[]).forEach(function(o){
+      if(!o.opp||seen[o.opp])return;
+      if(o.opp.toLowerCase().indexOf(q)>=0||o.emp.toLowerCase().indexOf(q)>=0){
+        seen[o.opp]=1;
+        results.push({type:'Opportunity',tag:'#FF8161',main:o.opp,sub:o.type+' · '+o.month,action:function(oppName){return function(){closeSearch();var btn=document.querySelector('[onclick*="opps"]');if(btn)btn.click();setTimeout(function(){var inp=document.getElementById('search-all');if(inp){inp.value=oppName;inp.dispatchEvent(new Event('input'));}},300);};}(o.opp)});
+      }
+    });
+    if(!results.length){el.innerHTML='<div class="sr-empty">No results for "'+q+'"</div>';return;}
+    results=results.slice(0,12);
+    el.innerHTML=results.map(function(r,i){
+      return '<div class="sr-item" onclick="window._srActions['+i+']()">'+'<span class="sr-tag" style="background:'+r.tag+'18;color:'+r.tag+'">'+r.type+'</span>'+'<div><div class="sr-main">'+r.main+'</div><div class="sr-sub">'+r.sub+'</div></div>'+'</div>';
+    }).join('');
+    window._srActions=results.map(function(r){return r.action;});
+  }
   var _lastSync=null;
   var _liveViews={opps:1,oppnet:1,oppgap:1,attainment:1};
   function updateLastUpdatedBar(viewKey){
