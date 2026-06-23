@@ -4375,10 +4375,17 @@ function renderAttContent(){
         e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(1)+'%</span></span>';
     }).join('');
     h1Card='<div class="card" style="border-top:3px solid #1e6b3e">'+
-      '<div class="card-header">'+
-        '<div class="card-title" style="color:#1e6b3e">Eligible for H1 split</div>'+
-        '<div style="font-size:11px;color:var(--muted2)">'+h1List.length+' employee'+(h1List.length!==1?'s':'')+' at ≥50% attainment · '+_attMonth+'</div>'+
-      '</div>'+
+      (function(){
+        var sellers=h1List.filter(function(e){return e.pl!=='Sales Leadership';});
+        var mgrs=h1List.filter(function(e){return e.pl==='Sales Leadership';});
+        return '<div class="card-header">'+
+          '<div class="card-title" style="color:#1e6b3e">Eligible for H1 split</div>'+
+          '<div style="font-size:11px;color:var(--muted2);line-height:1.7">'+
+            sellers.length+' employee'+(sellers.length!==1?'s':'')+' at ≥50% attainment · '+_attMonth+'<br>'+
+            mgrs.length+' sales manager'+(mgrs.length!==1?'s':'')+' at ≥40% attainment · '+_attMonth+
+          '</div>'+
+        '</div>';
+      })()+
       (h1List.length?
         '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">'+h1Names+'</div>'
       :'<div style="color:var(--muted2);font-size:12px;padding:4px 0">No employees above 50% yet.</div>')+
