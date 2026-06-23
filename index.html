@@ -4246,15 +4246,16 @@ function renderMgrContent() {
 
 
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
-var _attMonth='May 2026',_attPlan='all',_attRole='all';
+var _attMonth='June 2026',_attPlan='all',_attRole='all';
 function renderAttainment(){
-  _attMonth='May 2026';_attPlan='all';_attRole='all';
+  _attMonth=ATTAINMENT_DATA['June 2026']?'June 2026':'May 2026';_attPlan='all';_attRole='all';
   var planSet={};Object.keys(ATTAINMENT_DATA).forEach(function(m){ATTAINMENT_DATA[m].forEach(function(e){planSet[e.pl]=1;});});
   var plansList=Object.keys(planSet).filter(function(p){return p!=='CSD'&&p!=='CSD LEAD';}).sort();
-  var mTabs='<button class="tab" onclick="setAttMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setAttMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setAttMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setAttMonth(\'April 2026\',this)">April 2026</button><button class="tab active" onclick="setAttMonth(\'May 2026\',this)">May 2026</button>';
+  var junEstActive=_attMonth==='June 2026';
+  var mTabs='<button class="tab" onclick="setAttMonth(\'January 2026\',this)">January 2026</button><button class="tab" onclick="setAttMonth(\'February 2026\',this)">February 2026</button><button class="tab" onclick="setAttMonth(\'March 2026\',this)">March 2026</button><button class="tab" onclick="setAttMonth(\'April 2026\',this)">April 2026</button><button class="tab'+(junEstActive?'':' active')+'" onclick="setAttMonth(\'May 2026\',this)">May 2026</button>'+(ATTAINMENT_DATA['June 2026']?'<button class="tab'+(junEstActive?' active':'')+'" onclick="setAttMonth(\'June 2026\',this)">Jun (est.) 🔄</button>':'');
   var pTabs='<button class="tab active" onclick="setAttPlan(\'all\',this)">All plans</button>';plansList.forEach(function(p){pTabs+='<button class="tab" onclick="setAttPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';});
   var rTabs='<button class="tab active" onclick="setAttRole(\'all\',this)">All</button><button class="tab" onclick="setAttRole(\'mgr\',this)">Managers</button><button class="tab" onclick="setAttRole(\'rep\',this)">Non-managers</button>';
-  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – May 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div class="tabs" id="att-role-tabs">'+rTabs+'</div><div id="att-content"></div></div>';
+  document.getElementById('main').innerHTML='<div class="view"><div class="topbar"><div><div class="page-title">Attainment</div><div class="page-sub">Bookings quota attainment · January – June 2026</div></div></div><div class="tabs" id="att-month-tabs">'+mTabs+'</div><div class="tabs" id="att-plan-tabs">'+pTabs+'</div><div class="tabs" id="att-role-tabs">'+rTabs+'</div><div id="att-content"></div></div>';
   renderAttContent();
 }
 function setAttMonth(m,btn){_attMonth=m;document.querySelectorAll('#att-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderAttContent();}
@@ -4282,7 +4283,8 @@ function renderAttContent(){
       '<td class="num"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+bc+'22;color:'+bc+'">'+ATT_LABELS[bk]+'</span></td></tr>';
   });
   if(naList.length)detailRows+='<tr><td colspan="6" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>N/A ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
-  document.getElementById('att-content').innerHTML=
+  var estBanner=_attMonth==='June 2026'?'<div style="display:flex;align-items:center;gap:10px;background:#E8F4FD;border-bottom:2px solid #669AD2;padding:9px 20px;font-size:12.5px;color:#185FA5"><span style="font-size:15px">🔄</span><span><strong>June figures are estimated</strong> — derived live from the Google Sheet and will update as new deals close.</span></div>':'';
+  document.getElementById('att-content').innerHTML=estBanner+
     '<div class="kpi-grid">'+
     '<div class="kpi gr"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+naList.length+' N/A</div></div>'+
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Below 40%</div><div class="kpi-val" style="color:#FF8161">'+counts.sub40+'</div><div class="kpi-sub">'+(total?(counts.sub40/total*100).toFixed(0):0)+'%</div></div>'+
@@ -5092,22 +5094,44 @@ renderOverview();
     .then(function(text){
       var rows=parseCSV(text);
       if(rows.length<2)return;
-      var opps=rows.slice(1).map(function(r){
+      var rawRows=rows.slice(1);
+      var opps=rawRows.map(function(r){
         while(r.length<23)r.push('');
         var emp=r[1].trim(),month=(r[17]||'').trim()+' '+(r[18]||'').trim().replace('.0','');
         var resolved=ALIASES[emp]||emp;
+        var rawAtt=parseFloat(r[9])||0;
+        var att=rawAtt>0&&rawAtt<1.5?rawAtt*100:rawAtt;
         return{
           plan:r[2].trim(),emp:emp,mgr:empMgr[resolved]||'',
           opp:r[0].trim(),type:r[19].trim(),book:r[22].trim(),
           bk:toInt(r[6]),month:month.trim(),
           closed:xlDate(r[16]),start:xlDate(r[21]),
-          split:r[5]!==''?toInt(r[5]):100
+          split:r[5]!==''?toInt(r[5]):100,
+          _att:att
         };
       }).filter(function(o){return o.opp&&o.emp;});
-      if(opps.length<10)return; // sanity check
+      if(opps.length<10)return;
       _oppsData=opps;
-      // Re-render if currently on opps view
+      // Build June (est.) attainment from running attainment column
+      var SELLER_PLANS_ATT={'Agency':1,'Growth':1,'Net New':1,'HoCo':1};
+      var attMap={};
+      opps.forEach(function(o){
+        if(!SELLER_PLANS_ATT[o.plan]||!o._att)return;
+        var resolved=ALIASES[o.emp]||o.emp;
+        if(!attMap[resolved]||o._att>attMap[resolved].att){
+          attMap[resolved]={att:o._att,pl:o.plan,mgr:o.mgr};
+        }
+      });
+      var junEst=Object.keys(attMap).map(function(n){
+        var e=attMap[n];return{n:n,pl:e.pl,mgr:e.mgr,att:Math.round(e.att*10)/10};
+      }).sort(function(a,b){return b.att-a.att;});
+      if(junEst.length>0)ATTAINMENT_DATA['June 2026']=junEst;
+      // Re-render active views
       if(document.getElementById('opp-content'))renderOppContent();
+      if(document.getElementById('att-content')){
+        // Rebuild month tabs to include June tab if now available
+        renderAttainment();
+      }
     })
     .catch(function(){/* keep embedded fallback */});
 })();
