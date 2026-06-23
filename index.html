@@ -5290,10 +5290,9 @@ if(false)(function(){
 })();
 
 // ── Live sync from Google Sheet via Apps Script Web App ──
-// Paste your deployed Web App URL below after deploying doGet() in createBookingsSheet.gs
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzAJkTGaWdaxwZsid4s4U9t1ktZSTkzJEqKVA05RJ7UnN4mL02Y_E7auANWm9zLuf93/exec';
 
-(function(){
+function syncFromWebApp(){
   var SHEET_URL = WEBAPP_URL;
   var ALIASES={'Allen Hammock':'Edward Hammock','Daniel Madden':'Dan Madden','David Henson bowen':'David Henson Bowen','Jim Wasenius':'James Wasenius','Matt Vignieri':'Matthew Vignieri','Patti Soete':'Patricia Soete','Samuel Benkel':'Sam Benkel','Simon Piper Sales':'Simon Piper','Allie Kandall':'Allie Kendall','Celine Levy':'Celine Nicole Levy','Maura Mcnulty':'Maura McNulty'};
   function buildEmpMgr(){var m={};EMPLOYEES.forEach(function(e){m[e.n]=e.mgr||'';});return m;}
@@ -5404,7 +5403,11 @@ var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzAJkTGaWdaxwZsid4s4U9
       }
     })
     .catch(function(e){console.error('Opportunities fetch error:',e);});
-})();
+}
+
+// Initial load + auto-refresh every 5 minutes
+syncFromWebApp();
+setInterval(syncFromWebApp, 5 * 60 * 1000);
 
 </script>
 </body>
