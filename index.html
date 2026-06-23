@@ -5348,58 +5348,52 @@ if(false)(function(){
       computeJuneEst(opps, ALIASES);
 
       // ── Build NET_OPP_DATA from Opportunities tab ──────────────────────────
-      var SPIFF_NAMES=[['bbSpiff','Big Bet Spiff'],['lpSpiff','List Price Spiff'],
-        ['h1Spiff','H1 Spiff'],['mySpiff','Multi-Year Spiff'],['exSpiff','Expansion Spiff'],
-        ['pgSpiff','Platform Growth Spiff'],['naSpiff','New Account Spiff'],['hcSpiff','HoCo Spiff'],
-        ['oaBonus','OA Bonus']];
-      var byOpp={};
-      opps.forEach(function(r){
-        var k=r.opp;
-        if(!byOpp[k]) byOpp[k]={opp:r.opp,type:r.type,book:r.book,closed:r.closed,month:r.month,
-          acv:r.acv,bk:0,emps:[],comm:0,spiffs:0,
-          bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0,oa:0};
-        var g=byOpp[k];
-        if(r.emp&&g.emps.indexOf(r.emp)<0)g.emps.push(r.emp);
-        // booking: dedupe by emp (each employee row has their split-adjusted bk)
-        g.bk+=r.bk;
-        g.comm+=r.comm; g.oa+=r.oaBonus;
-        g.bb+=r.bbSpiff; g.lp+=r.lpSpiff; g.h1+=r.h1Spiff;
-        g.my+=r.mySpiff; g.ex+=r.exSpiff; g.pg+=r.pgSpiff;
-        g.na+=r.naSpiff; g.hc+=r.hcSpiff;
-      });
-      // Deduplicate bk: the Opportunities tab has one row per employee per opp,
-      // all carrying the full opp ACV/bk — take from first row only
-      var _seenBk={};
-      opps.forEach(function(r){
-        if(!_seenBk[r.opp]){_seenBk[r.opp]=r.acv;}
-      });
-      var liveNetOpp=Object.values(byOpp).map(function(g){
-        var totalSpiffs=g.bb+g.lp+g.h1+g.my+g.ex+g.pg+g.na+g.hc+g.oa;
-        var payout=g.comm+totalSpiffs;
-        var acv=_seenBk[g.opp]||g.acv;
-        var netAcv=acv-payout;
-        var netPct=acv>0?Math.round((netAcv/acv)*1000)/10:0;
-        var spiffBreakdown=SPIFF_NAMES.filter(function(s){return g[s[0].replace('Spiff','').replace('oaBonus','oa')]!==0||g[s[0]]!==0;}).map(function(s){
-          var key=s[0]==='oaBonus'?'oa':s[0].replace('Spiff','');
-          // map back to g properties
-          var keyMap={bbSpiff:'bb',lpSpiff:'lp',h1Spiff:'h1',mySpiff:'my',exSpiff:'ex',pgSpiff:'pg',naSpiff:'na',hcSpiff:'hc',oaBonus:'oa'};
-          var amt=g[keyMap[s[0]]||s[0]];
-          return amt?{n:s[1],amt:Math.round(amt*100)/100}:null;
-        }).filter(Boolean);
-        return{
-          opp:g.opp,type:g.type,book:g.book,closed:g.closed,month:g.month,
-          acv:acv,bk:acv,emps:g.emps.join(', '),
-          comm:Math.round(g.comm*100)/100,spiffs:Math.round(totalSpiffs*100)/100,
-          payout:Math.round(payout*100)/100,
-          netAcv:Math.round(netAcv),netPct:netPct,
-          spiffBreakdown:spiffBreakdown
-        };
-      }).sort(function(a,b){return a.closed>b.closed?1:-1;});
-      if(liveNetOpp.length>0){
-        NET_OPP_DATA=liveNetOpp;
-        window._netData=liveNetOpp;
-        if(document.getElementById('net-content'))renderNetContent();
-      }
+      try {
+        var byOpp2={};
+        var seenAcv={};
+        opps.forEach(function(r){
+          var k=r.opp;
+          if(!byOpp2[k]) byOpp2[k]={opp:r.opp,type:r.type,book:r.book,closed:r.closed,month:r.month,
+            emps:[],comm:0,oa:0,bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0};
+          var g=byOpp2[k];
+          if(r.emp&&g.emps.indexOf(r.emp)<0)g.emps.push(r.emp);
+          if(!seenAcv[k])seenAcv[k]=r.acv; // ACV is opp-level, take first occurrence
+          g.comm+=r.comm; g.oa+=r.oaBonus;
+          g.bb+=r.bbSpiff; g.lp+=r.lpSpiff; g.h1+=r.h1Spiff;
+          g.my+=r.mySpiff; g.ex+=r.exSpiff; g.pg+=r.pgSpiff;
+          g.na+=r.naSpiff; g.hc+=r.hcSpiff;
+        });
+        var liveNetOpp=Object.keys(byOpp2).map(function(k){
+          var g=byOpp2[k];
+          var acv=seenAcv[k]||0;
+          var totalSpiffs=g.bb+g.lp+g.h1+g.my+g.ex+g.pg+g.na+g.hc+g.oa;
+          var payout=g.comm+totalSpiffs;
+          var netAcv=acv-payout;
+          var netPct=acv>0?Math.round((netAcv/acv)*1000)/10:0;
+          var spiffBreakdown=[];
+          if(g.bb)spiffBreakdown.push({n:'Big Bet Spiff',amt:Math.round(g.bb)});
+          if(g.lp)spiffBreakdown.push({n:'List Price Spiff',amt:Math.round(g.lp)});
+          if(g.h1)spiffBreakdown.push({n:'H1 Spiff',amt:Math.round(g.h1)});
+          if(g.my)spiffBreakdown.push({n:'Multi-Year Spiff',amt:Math.round(g.my)});
+          if(g.ex)spiffBreakdown.push({n:'Expansion Spiff',amt:Math.round(g.ex)});
+          if(g.pg)spiffBreakdown.push({n:'Platform Growth Spiff',amt:Math.round(g.pg)});
+          if(g.na)spiffBreakdown.push({n:'New Account Spiff',amt:Math.round(g.na)});
+          if(g.hc)spiffBreakdown.push({n:'HoCo Spiff',amt:Math.round(g.hc)});
+          if(g.oa)spiffBreakdown.push({n:'OA Bonus',amt:Math.round(g.oa)});
+          return{opp:g.opp,type:g.type,book:g.book,closed:g.closed,month:g.month,
+            acv:acv,bk:acv,emps:g.emps.join(', '),
+            comm:Math.round(g.comm),spiffs:Math.round(totalSpiffs),
+            payout:Math.round(payout),netAcv:Math.round(netAcv),netPct:netPct,
+            spiffBreakdown:spiffBreakdown};
+        }).filter(function(o){return o.acv>0||o.comm>0;})
+          .sort(function(a,b){return a.closed>b.closed?1:a.closed<b.closed?-1:0;});
+        console.log('Net Opp built:',liveNetOpp.length,'opps. Mars Wrigley:',liveNetOpp.find(function(o){return o.opp.indexOf('Mars')>=0;}));
+        if(liveNetOpp.length>0){
+          NET_OPP_DATA=liveNetOpp;
+          window._netData=liveNetOpp;
+          if(document.getElementById('net-content'))renderNetContent();
+        }
+      } catch(e){console.error('Net Opp build error:',e);}
 
       // Re-render active views
       if(document.getElementById('opp-content'))renderOppContent();
@@ -5408,7 +5402,7 @@ if(false)(function(){
         renderAttainment();
       }
     })
-    .catch(function(){/* keep embedded fallback */});
+    .catch(function(e){console.error('Opportunities fetch error:',e);});
 })();
 
 </script>
