@@ -4995,12 +4995,62 @@ function renderNetContent() {
     '</div>';
   }).join('');
 
+  // Build employee → spiff types lookup from SPIFF_DATA
+  var _empSpiffMap = {};
+  (SPIFF_DATA['Total YTD']||[]).forEach(function(e){
+    if(e.types && e.types.length) _empSpiffMap[e.n.toLowerCase()] = e.types;
+  });
+
+  // Shorten spiff type names to compact badges
+  function _shortSpiff(name) {
+    var n = name.replace(/ 202[0-9].*/,'').replace(/ \(carry\)/,'').trim();
+    if(n.indexOf('Big Bet')>=0) return 'Big Bet';
+    if(n.indexOf('List Price')>=0) return 'List Price';
+    if(n.indexOf('Search Promo')>=0) return 'Search Promo';
+    if(n.indexOf('Expansion')>=0) return 'Expansion';
+    if(n.indexOf('Mid-Funnel')>=0) return 'Mid-Funnel IL';
+    if(n.indexOf('New Account')>=0) return 'New Account';
+    if(n.indexOf('Expert Services')>=0) return 'Expert Svcs IL';
+    if(n.indexOf('Pilot Conversion')>=0) return 'Pilot Conv';
+    if(n.indexOf('Platform Renewals')>=0) return 'Plat Renewals';
+    if(n.indexOf('Upsell/Cross-sell')>=0) return 'Upsell/XSell';
+    if(n.indexOf('Renewal Spiff')>=0) return 'Renewal';
+    if(n.indexOf('Platform Growth')>=0) return 'Plat Growth';
+    if(n.indexOf('Committed Revenue')>=0) return 'Committed Rev';
+    if(n.indexOf('HoCo Revenue')>=0) return 'HoCo MBO';
+    if(n.indexOf('Net Retention')>=0) return 'Net Retention';
+    if(n.indexOf('Client Renewal')>=0) return 'Client Renewal';
+    if(n.indexOf('H1')>=0) return 'H1';
+    return n.substring(0,18);
+  }
+
   // Sorted table — worst net % first
   var sorted=data.slice().sort(function(a,b){return a.netPct-b.netPct;});
   function netColor(p){return p<70?'#c00':p<85?'#FF8161':p<95?'#FFB900':p<99?'#669AD2':'#406EF1';}
   var rows=sorted.map(function(o,i){
     var tc=TYPE_C[o.type]||'#878F91',bc=o.book==='Platform'?'#406EF1':'#878F91';
     var hasSpiff = o.spiffs>0, hasComm = o.comm>0;
+
+    // Collect spiff type breakdowns per employee on this opp
+    var empRows = [];
+    (o.emps||'').split(', ').forEach(function(empName){
+      var key = empName.trim().toLowerCase();
+      var types = _empSpiffMap[key];
+      if(types && types.length){
+        var badges = types.map(function(t){
+          var short = _shortSpiff(t.name);
+          var isCarry = t.carry;
+          var bg = isCarry ? '#87878118' : '#b0840018';
+          var col = isCarry ? '#878F91' : '#b08400';
+          return '<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:'+bg+';color:'+col+';white-space:nowrap">'+short+(isCarry?' ↩':'')+'</span>';
+        }).join('');
+        empRows.push('<div style="margin-bottom:2px"><span style="font-size:9px;color:var(--muted);margin-right:3px">'+empName.trim()+':</span>'+badges+'</div>');
+      }
+    });
+    var spiffCell = hasSpiff
+      ? fm(Math.round(o.spiffs)) + (empRows.length ? '<div style="margin-top:4px;text-align:left">'+empRows.join('')+'</div>' : '')
+      : '—';
+
     return '<tr>' +
       '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>' +
       '<td class="fw" style="font-size:12px;max-width:200px">'+o.opp+'</td>' +
@@ -5010,7 +5060,7 @@ function renderNetContent() {
       '<td class="num">'+fm(o.acv)+'</td>' +
       '<td class="num" style="font-size:11px;color:var(--muted2)">'+(o.bk>0?fm(o.bk):'—')+'</td>' +
       '<td class="num" style="font-size:11px;color:var(--muted2)">'+(hasComm?fm(Math.round(o.comm)):'—')+'</td>' +
-      '<td class="num" style="font-size:11px;color:'+(hasSpiff?'#b08400':'var(--muted)')+'">'+  (hasSpiff?fm(Math.round(o.spiffs)):'—')+'</td>' +
+      '<td class="num" style="font-size:11px;color:'+(hasSpiff?'#b08400':'var(--muted2)')+'">'+spiffCell+'</td>' +
       '<td class="num fw" style="color:#FF8161">'+fm(Math.round(o.payout))+'</td>' +
       '<td class="num fw">'+fm(o.netAcv)+'</td>' +
       '<td class="num fw" style="color:'+netColor(o.netPct)+'">'+o.netPct+'%</td>' +
