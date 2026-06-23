@@ -5289,9 +5289,12 @@ if(false)(function(){
     .catch(function(e){console.error('Net Opp fetch error:',e);});
 })();
 
-// ── Live sync from Google Sheet ──
+// ── Live sync from Google Sheet via Apps Script Web App ──
+// Paste your deployed Web App URL below after deploying doGet() in createBookingsSheet.gs
+var WEBAPP_URL = 'PASTE_WEBAPP_URL_HERE';
+
 (function(){
-  var SHEET_URL='https://docs.google.com/spreadsheets/d/1HT_HiwLwLrKDpgFjcc072-6N9maFIRAd5UtzUERY2PQ/gviz/tq?tqx=out:csv&sheet=Opportunities';
+  var SHEET_URL = WEBAPP_URL;
   var ALIASES={'Allen Hammock':'Edward Hammock','Daniel Madden':'Dan Madden','David Henson bowen':'David Henson Bowen','Jim Wasenius':'James Wasenius','Matt Vignieri':'Matthew Vignieri','Patti Soete':'Patricia Soete','Samuel Benkel':'Sam Benkel','Simon Piper Sales':'Simon Piper','Allie Kandall':'Allie Kendall','Celine Levy':'Celine Nicole Levy','Maura Mcnulty':'Maura McNulty'};
   function buildEmpMgr(){var m={};EMPLOYEES.forEach(function(e){m[e.n]=e.mgr||'';});return m;}
   function parseCSV(text){
@@ -5319,28 +5322,26 @@ if(false)(function(){
     return v;
   }
   var empMgr=buildEmpMgr();
+  var isWebApp = SHEET_URL && SHEET_URL.indexOf('script.google.com')>=0;
+  if(!isWebApp){console.warn('WEBAPP_URL not set — live sync disabled.');return;}
   fetch(SHEET_URL,{cache:'no-cache'})
-    .then(function(r){if(!r.ok)throw new Error('sheet fetch failed');return r.text();})
-    .then(function(text){
-      var rows=parseCSV(text);
-      if(rows.length<2)return;
-      var rawRows=rows.slice(1);
-      function toF2(v){var n=parseFloat(String(v).replace(/[$, ]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
+    .then(function(r){if(!r.ok)throw new Error('fetch failed: '+r.status);return r.json();})
+    .then(function(json){
+      if(json.error)throw new Error('Web App error: '+json.error);
+      var rawRows=json.rows||[];
+      if(rawRows.length<10)return;
       var opps=rawRows.map(function(r){
-        while(r.length<35)r.push('');
-        var emp=r[1].trim(),month=(r[17]||'').trim()+' '+(r[18]||'').trim().replace('.0','');
-        var resolved=ALIASES[emp]||emp;
+        var emp=r.emp||'',resolved=ALIASES[emp]||emp;
+        var month=(r.month||'')+' '+(r.year||'');
         return{
-          plan:r[2].trim(),emp:emp,mgr:empMgr[resolved]||'',
-          opp:r[0].trim(),type:r[19].trim(),book:r[22].trim(),
-          bk:toInt(r[6]),month:month.trim(),
-          closed:xlDate(r[16]),start:xlDate(r[21]),
-          split:r[5]!==''?toInt(r[5]):100,
-          // financial cols
-          acv:toF2(r[15]),comm:toF2(r[13]),oaBonus:toF2(r[14]),
-          bbSpiff:toF2(r[26]),lpSpiff:toF2(r[27]),h1Spiff:toF2(r[29]),
-          mySpiff:toF2(r[30]),exSpiff:toF2(r[31]),pgSpiff:toF2(r[32]),
-          naSpiff:toF2(r[33]),hcSpiff:toF2(r[34])
+          plan:r.plan||'',emp:emp,mgr:empMgr[resolved]||'',
+          opp:r.opp||'',type:r.type||'',book:r.book||'',
+          bk:r.bk||0,month:month.trim(),
+          closed:r.closed||'',start:r.start||'',split:r.split||100,
+          acv:r.acv||0,comm:r.comm||0,oaBonus:r.oa||0,
+          bbSpiff:r.bb||0,lpSpiff:r.lp||0,h1Spiff:r.h1||0,
+          mySpiff:r.my||0,exSpiff:r.ex||0,pgSpiff:r.pg||0,
+          naSpiff:r.na||0,hcSpiff:r.hc||0
         };
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
