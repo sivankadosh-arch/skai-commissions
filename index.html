@@ -4364,7 +4364,11 @@ function renderAttContent(){
   var H1_MONTHS={'January 2026':1,'February 2026':1,'March 2026':1,'April 2026':1,'May 2026':1,'June 2026':1};
   var h1Card='';
   if(H1_MONTHS[_attMonth]){
-    var h1List=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){return e.att!==null&&e.att!==undefined&&e.att>=50;}).sort(function(a,b){return b.att-a.att;});
+    var h1List=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){
+      if(e.att===null||e.att===undefined)return false;
+      var threshold=e.pl==='Sales Leadership'?40:50;
+      return e.att>=threshold;
+    }).sort(function(a,b){return b.att-a.att;});
     var h1Names=h1List.map(function(e){
       var c=e.att>=100?'#406EF1':e.att>=85?'#185FA5':'#1e6b3e';
       return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+
