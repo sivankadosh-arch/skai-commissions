@@ -4359,6 +4359,28 @@ function renderAttContent(){
   });
   if(naList.length)detailRows+='<tr><td colspan="6" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>N/A ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
   var estBanner=_attMonth==='June 2026'?'<div style="display:flex;align-items:center;gap:10px;background:#E8F4FD;border-bottom:2px solid #669AD2;padding:9px 20px;font-size:12.5px;color:#185FA5"><span style="font-size:15px">🔄</span><span><strong>June figures are estimated</strong> — derived live from the Google Sheet and will update as new deals close.</span></div>':'';
+
+  // H1 split eligibility card — Jan through Jun only
+  var H1_MONTHS={'January 2026':1,'February 2026':1,'March 2026':1,'April 2026':1,'May 2026':1,'June 2026':1};
+  var h1Card='';
+  if(H1_MONTHS[_attMonth]){
+    var h1List=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){return e.att!==null&&e.att!==undefined&&e.att>=50;}).sort(function(a,b){return b.att-a.att;});
+    var h1Names=h1List.map(function(e){
+      var c=e.att>=100?'#406EF1':e.att>=85?'#185FA5':'#1e6b3e';
+      return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+
+        e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(1)+'%</span></span>';
+    }).join('');
+    h1Card='<div class="card" style="border-top:3px solid #1e6b3e">'+
+      '<div class="card-header">'+
+        '<div class="card-title" style="color:#1e6b3e">Eligible for H1 split</div>'+
+        '<div style="font-size:11px;color:var(--muted2)">'+h1List.length+' employee'+(h1List.length!==1?'s':'')+' at ≥50% attainment · '+_attMonth+'</div>'+
+      '</div>'+
+      (h1List.length?
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">'+h1Names+'</div>'
+      :'<div style="color:var(--muted2);font-size:12px;padding:4px 0">No employees above 50% yet.</div>')+
+    '</div>';
+  }
+
   document.getElementById('att-content').innerHTML=estBanner+
     '<div class="kpi-grid">'+
     '<div class="kpi gr"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+naList.length+' N/A</div></div>'+
@@ -4367,6 +4389,7 @@ function renderAttContent(){
     '<div class="kpi" style="border-top:3px solid #669AD2"><div class="kpi-label">85–100%</div><div class="kpi-val" style="color:#185FA5">'+counts.near+'</div><div class="kpi-sub">'+(total?(counts.near/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi g"><div class="kpi-label">Above 100%</div><div class="kpi-val" style="color:#406EF1">'+counts.over+'</div><div class="kpi-sub">'+(total?(counts.over/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi b"><div class="kpi-label">Avg attainment</div><div class="kpi-val">'+avg+'%</div></div></div>'+
+    h1Card+
     '<div class="card"><div class="card-header"><div class="card-title">Attainment by employee — '+_attMonth+(_attPlan!=='all'?' · '+_attPlan:'')+'</div></div><div class="ch" style="height:'+Math.max(sortedRated.length*28+60,200)+'px"><canvas id="attChart"></canvas></div></div>'+
     '<div class="card"><div class="card-header"><div class="card-title">Employee detail</div></div><table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead><tbody>'+detailRows+'</tbody></table></div>';
   if(sortedRated.length)mkChart('attChart',{type:'bar',data:{labels:sortedRated.map(function(e){return e.n;}),datasets:[{data:sortedRated.map(function(e){return Math.round(e.att*10)/10;}),backgroundColor:sortedRated.map(function(e){return ATT_COLORS[attBucket(e.att)];}),borderRadius:2}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sortedRated[0]?sortedRated[0].att+5:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
