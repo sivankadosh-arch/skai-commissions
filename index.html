@@ -42,7 +42,7 @@ nav{padding:12px 0;flex:1}
 .nav-btn.active{background:rgba(64,110,241,0.25);color:#fff;font-weight:600}
 .nav-btn .icon{font-size:15px;width:20px;text-align:center}
 .main-wrap{margin-left:var(--sidebar);flex:1;padding:0;min-height:100vh}
-#main{padding:24px;min-height:100vh}
+#main{padding:24px;min-height:100vh;background:var(--bg)}
 .view{max-width:1200px}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
 .page-title{font-size:22px;font-weight:700;color:var(--text)}
@@ -186,9 +186,8 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
   function toggleFmFull(){_fmFull=!_fmFull;var btn=document.getElementById('fmt-toggle');btn.textContent=_fmFull?'Show K':'Full $';var active=document.querySelector('.nav-btn.active');if(active)active.click();}
   function toggleTheme(){
     var b=document.body,btn=document.getElementById('theme-toggle');
-    if(b.classList.contains('dark-mode')){b.classList.remove('dark-mode');btn.textContent='☀️ Light';}
-    else if(b.classList.contains('light-mode')){b.classList.remove('light-mode');btn.textContent='☀️ Light';}
-    else{b.classList.add('light-mode');btn.textContent='🌙 Dark';}
+    if(b.classList.contains('dark-mode')){b.classList.remove('dark-mode');btn.textContent='🌙 Dark';}
+    else{b.classList.add('dark-mode');btn.textContent='☀️ Light';}
   }
 
   // ── Global search ──────────────────────────────────────────────────────────
