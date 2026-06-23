@@ -5048,12 +5048,8 @@ function renderNetContent() {
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
     '<div class="kpi" style="border-top:3px solid #b08400"><div class="kpi-label">Spiffs</div><div class="kpi-val" style="color:#b08400">'+fm(Math.round(totalSpiffs))+'</div><div class="kpi-sub"></div></div>' +
     '</div>' +
-    '<div class="grid2">' +
-    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Net % distribution</div></div>' +
+    '<div class="card" style="margin-bottom:14px"><div class="card-header"><div class="card-title">Net % distribution</div></div>' +
     '<div style="padding:8px 0">'+distBars+'</div></div>' +
-    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">By type · ACV vs Net</div></div>' +
-    '<div class="ch" style="height:200px"><canvas id="netTypeChart"></canvas></div></div>' +
-    '</div>' +
     '<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">All opportunities · sorted by lowest net %</div></div>' +
     '<div class="tbl-wrap"><table>' +
     '<thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th>Month</th><th class="num">ACV</th><th class="num">Booking</th><th class="num">Total payout</th><th class="num">Net ACV</th><th class="num">Net %</th><th>Employees</th></tr></thead>' +
@@ -5061,12 +5057,6 @@ function renderNetContent() {
     '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num">'+fm(totalBk)+'</td><td class="num fw" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
     '</table></div></div>';
 
-  mkChart('netTypeChart',{type:'bar',data:{
-    labels:typeKeys,
-    datasets:[
-      {label:'ACV',data:typeKeys.map(function(t){return Math.round(byType[t].acv);}),backgroundColor:'#406EF118',borderColor:'#406EF1',borderWidth:2,borderRadius:3},
-      {label:'Net',data:typeKeys.map(function(t){return Math.round(byType[t].net);}),backgroundColor:'#669AD218',borderColor:'#669AD2',borderWidth:2,borderRadius:3}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},color:TICK_COLOR,boxWidth:9}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+fm(ctx.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:TICK_COLOR,font:{size:10}}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}}}}});
 }
 
 
