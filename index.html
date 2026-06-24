@@ -4589,8 +4589,10 @@ function selectMgr(name) {
 
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
 var _attMonth='June 2026',_attPlan='all',_attRole='all';
+var _attEmpSearch='',_attWhatIfEmp=null,_attWhatIfAmt=0;
 function renderAttainment(){
   _attMonth=ATTAINMENT_DATA['June 2026']?'June 2026':'May 2026';_attPlan='all';_attRole='all';
+  _attEmpSearch='';_attWhatIfEmp=null;_attWhatIfAmt=0;
   var planSet={};Object.keys(ATTAINMENT_DATA).forEach(function(m){ATTAINMENT_DATA[m].forEach(function(e){planSet[e.pl]=1;});});
   var plansList=Object.keys(planSet).filter(function(p){return p!=='CSD'&&p!=='CSD LEAD';}).sort();
   var junEstActive=_attMonth==='June 2026';
@@ -4617,17 +4619,34 @@ function renderAttContent(){
   var total=rated.length,avg=total?(rated.reduce(function(s,e){return s+e.att;},0)/total).toFixed(1):'—';
   var counts={sub40:0,mid:0,near:0,over:0};rated.forEach(function(e){counts[attBucket(e.att)]++;});
   var sortedRated=[].concat(rated).sort(function(a,b){return b.att-a.att;});
+
+  // Build PAY_RATE lookup for booking/target (used by what-if)
+  var prLookup={};
+  (PAY_RATE_DATA['Total YTD']||[]).forEach(function(e){prLookup[e.n]=e;});
+
+  // Detail rows — clickable, filtered by search
+  var q=(_attEmpSearch||'').toLowerCase();
+  var visibleRated=sortedRated.filter(function(e){return !q||e.n.toLowerCase().indexOf(q)>=0;});
   var detailRows='';
-  sortedRated.forEach(function(e,i){
+  visibleRated.forEach(function(e,i){
     var bc=attColor(e.att),bk=attBucket(e.att);
-    detailRows+='<tr><td style="color:var(--muted);font-size:11px">'+(i+1)+'</td><td class="fw">'+e.n+'</td><td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td><td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
-      '<td class="num fw" style="color:'+bc+'">'+e.att.toFixed(1)+'%<div style="height:6px;background:var(--grey-light);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+Math.min(e.att,100).toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div></td>'+
+    var isSel=_attWhatIfEmp===e.n;
+    detailRows+='<tr onclick="attSelectEmp(\''+e.n.replace(/'/g,"\\'")+'\')" style="cursor:pointer;'+(isSel?'background:rgba(64,110,241,0.07);':'')+'">' +
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>' +
+      '<td class="fw" style="color:'+(isSel?'#406EF1':'var(--text)')+'">'+e.n+'</td>' +
+      '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>' +
+      '<td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
+      '<td class="num fw" style="color:'+bc+'">'+e.att.toFixed(1)+'%'+
+        '<div style="height:6px;background:var(--grey-light);border-radius:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+Math.min(e.att,100).toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'+
+        '</div></td>'+
       '<td class="num"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+bc+'22;color:'+bc+'">'+ATT_LABELS[bk]+'</span></td></tr>';
   });
-  if(naList.length)detailRows+='<tr><td colspan="6" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>N/A ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
+  if(naList.length&&!q)detailRows+='<tr><td colspan="6" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>N/A ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
+
   var estBanner=_attMonth==='June 2026'?'<div style="display:flex;align-items:center;gap:10px;background:rgba(76,175,80,0.07);border-bottom:1px solid rgba(76,175,80,0.25);padding:9px 20px;font-size:12.5px;color:#2e7d32"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.3);border-radius:20px;padding:2px 9px"><span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span><span><strong>June data is live</strong> — updates automatically as new deals close. Figures are preliminary until month-end.</span></div>':'';
 
-  // H1 split eligibility card — Jan through Jun only
+  // H1 eligibility card
   var H1_MONTHS={'January 2026':1,'February 2026':1,'March 2026':1,'April 2026':1,'May 2026':1,'June 2026':1};
   var h1Card='';
   if(H1_MONTHS[_attMonth]){
@@ -4638,26 +4657,15 @@ function renderAttContent(){
     }).sort(function(a,b){return b.att-a.att;});
     var h1Names=h1List.map(function(e){
       var c=e.att>=100?'#406EF1':e.att>=85?'#185FA5':'#1e6b3e';
-      return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+
-        e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(1)+'%</span></span>';
+      return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(1)+'%</span></span>';
     }).join('');
-    h1Card='<div class="card" style="border-top:3px solid #1e6b3e">'+
-      (function(){
-        var sellers=h1List.filter(function(e){return e.pl!=='Sales Leadership';});
-        var mgrs=h1List.filter(function(e){return e.pl==='Sales Leadership';});
-        return '<div class="card-header">'+
-          '<div class="card-title" style="color:#1e6b3e">Eligible for H1 split</div>'+
-          '<div style="font-size:11px;color:var(--muted2);line-height:1.7">'+
-            sellers.length+' employee'+(sellers.length!==1?'s':'')+' at ≥50% attainment · '+_attMonth+'<br>'+
-            mgrs.length+' sales manager'+(mgrs.length!==1?'s':'')+' at ≥40% attainment · '+_attMonth+
-          '</div>'+
-        '</div>';
-      })()+
-      (h1List.length?
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">'+h1Names+'</div>'
-      :'<div style="color:var(--muted2);font-size:12px;padding:4px 0">No employees above 50% yet.</div>')+
-    '</div>';
+    var sellers=h1List.filter(function(e){return e.pl!=='Sales Leadership';});
+    var mgrs=h1List.filter(function(e){return e.pl==='Sales Leadership';});
+    h1Card='<div class="card" style="border-top:3px solid #1e6b3e"><div class="card-header"><div class="card-title" style="color:#1e6b3e">Eligible for H1 split</div><div style="font-size:11px;color:var(--muted2);line-height:1.7">'+sellers.length+' employee'+(sellers.length!==1?'s':'')+' at ≥50% · '+_attMonth+'<br>'+mgrs.length+' manager'+(mgrs.length!==1?'s':'')+' at ≥40% · '+_attMonth+'</div></div>'+(h1List.length?'<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">'+h1Names+'</div>':'<div style="color:var(--muted2);font-size:12px;padding:4px 0">No employees above threshold yet.</div>')+'</div>';
   }
+
+  // What-if panel HTML
+  var wiPanel=buildWhatIfPanel(sortedRated,prLookup);
 
   document.getElementById('att-content').innerHTML=estBanner+
     '<div class="kpi-grid">'+
@@ -4668,9 +4676,133 @@ function renderAttContent(){
     '<div class="kpi g"><div class="kpi-label">Above 100%</div><div class="kpi-val" style="color:#406EF1">'+counts.over+'</div><div class="kpi-sub">'+(total?(counts.over/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi b"><div class="kpi-label">Avg attainment</div><div class="kpi-val">'+avg+'%</div></div></div>'+
     h1Card+
+    wiPanel+
     '<div class="card"><div class="card-header"><div class="card-title">Attainment by employee — '+_attMonth+(_attPlan!=='all'?' · '+_attPlan:'')+'</div></div><div class="ch" style="height:'+Math.max(sortedRated.length*28+60,200)+'px"><canvas id="attChart"></canvas></div></div>'+
-    '<div class="card"><div class="card-header"><div class="card-title">Employee detail</div></div><table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead><tbody>'+detailRows+'</tbody></table></div>';
-  if(sortedRated.length)mkChart('attChart',{type:'bar',data:{labels:sortedRated.map(function(e){return e.n;}),datasets:[{data:sortedRated.map(function(e){return Math.round(e.att*10)/10;}),backgroundColor:sortedRated.map(function(e){return ATT_COLORS[attBucket(e.att)];}),borderRadius:2}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sortedRated[0]?sortedRated[0].att+5:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+    '<div class="card"><div class="card-header" style="justify-content:space-between;align-items:center">'+
+      '<div class="card-title">Employee detail</div>'+
+      '<input id="att-emp-search" type="text" placeholder="Filter employee…" value="'+(_attEmpSearch||'')+'" oninput="_attEmpSearch=this.value;renderAttContent();" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;width:200px;background:var(--card);color:var(--text)">'+
+    '</div>'+
+    '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead><tbody>'+detailRows+'</tbody></table></div>';
+
+  drawAttChart(sortedRated,prLookup);
+}
+
+function buildWhatIfPanel(sortedRated,prLookup){
+  var emp=_attWhatIfEmp?sortedRated.find(function(e){return e.n===_attWhatIfEmp;}):null;
+  var empNames=sortedRated.map(function(e){return e.n;});
+  var ddOpts=empNames.map(function(n){return '<option value="'+n+'"'+(n===_attWhatIfEmp?' selected':'')+'>'+n+'</option>';}).join('');
+
+  var predHtml='';
+  if(emp){
+    var pr=prLookup[emp.n];
+    var booking=pr?pr.booking:0;
+    var amt=_attWhatIfAmt||0;
+    var curAtt=emp.att;
+    var predAtt=booking>0?Math.round((curAtt*(booking+amt)/booking)*10)/10:curAtt;
+    var delta=Math.round((predAtt-curAtt)*10)/10;
+    var curBc=attColor(curAtt),predBc=attColor(predAtt);
+
+    // Threshold crossings
+    var thresholds=[];
+    if(curAtt<40&&predAtt>=40)thresholds.push({label:'crosses 40%',c:'#FFB900'});
+    if(curAtt<85&&predAtt>=85)thresholds.push({label:'crosses 85%',c:'#669AD2'});
+    if(curAtt<100&&predAtt>=100)thresholds.push({label:'crosses 100%',c:'#406EF1'});
+    // How much to reach next threshold
+    var nextT=curAtt<40?40:curAtt<85?85:curAtt<100?100:null;
+    var neededHtml='';
+    if(nextT&&booking>0){
+      var needed=Math.round(booking*(nextT-curAtt)/curAtt);
+      neededHtml='<div style="font-size:11px;color:var(--muted2);margin-top:6px">To reach <strong>'+nextT+'%</strong>: needs <strong>+'+fm(needed)+'</strong> more in bookings</div>';
+    }
+
+    predHtml=
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px">'+
+        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
+          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Current attainment</div>'+
+          '<div style="font-size:28px;font-weight:700;color:'+curBc+'">'+curAtt.toFixed(1)+'%</div>'+
+          '<div style="font-size:11px;color:var(--muted2);margin-top:4px">'+ATT_LABELS[attBucket(curAtt)]+'</div>'+
+        '</div>'+
+        '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
+          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Added bookings</div>'+
+          '<div style="font-size:28px;font-weight:700;color:var(--text)">'+fm(amt)+'</div>'+
+          '<div style="font-size:11px;color:var(--muted2);margin-top:4px">'+(booking>0?'YTD bookings: '+fm(booking):'No booking data')+'</div>'+
+        '</div>'+
+        '<div style="background:'+(delta>0?'rgba(64,110,241,0.07)':'var(--grey-light)')+';border:1.5px solid '+(delta>0?'#406EF1':'var(--border)')+';border-radius:8px;padding:12px 14px">'+
+          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Predicted attainment</div>'+
+          '<div style="font-size:28px;font-weight:700;color:'+predBc+'">'+predAtt.toFixed(1)+'%</div>'+
+          '<div style="font-size:11px;color:'+(delta>0?'#406EF1':'var(--muted2)')+';margin-top:4px;font-weight:600">'+(delta>0?'↑ +':delta<0?'↓ ':'')+delta.toFixed(1)+'% vs current</div>'+
+        '</div>'+
+      '</div>'+
+      (thresholds.length?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+thresholds.map(function(t){return '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+t.c+'22;color:'+t.c+'">✓ '+t.label+'</span>';}).join('')+'</div>':'')+
+      neededHtml;
+  }
+
+  var empInfo=emp?'<span style="font-size:11px;color:var(--muted2);margin-left:8px">'+emp.pl+(emp.mgr?' · '+emp.mgr:'')+'</span>':'';
+
+  return '<div class="card" style="border-top:3px solid #406EF1;margin-bottom:16px">'+
+    '<div class="card-header" style="margin-bottom:8px">'+
+      '<div class="card-title" style="display:flex;align-items:center;gap:8px">'+
+        '<span>Attainment predictor</span>'+
+        (emp?'<span style="font-size:12px;font-weight:600;color:#406EF1">· '+emp.n+'</span>':'<span style="font-size:11px;color:var(--muted);font-weight:400">Select an employee below to run a what-if scenario</span>')+
+      '</div>'+
+      (emp?'<button onclick="_attWhatIfEmp=null;_attWhatIfAmt=0;renderAttContent();" style="font-size:11px;padding:3px 10px;border:1px solid var(--border);border-radius:20px;background:none;color:var(--muted2);cursor:pointer">Clear</button>':'')+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<label style="font-size:12px;color:var(--muted2);white-space:nowrap">Employee</label>'+
+        '<select onchange="attSelectEmp(this.value)" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--card);color:var(--text);cursor:pointer">'+
+          '<option value="">— choose —</option>'+ddOpts+
+        '</select>'+empInfo+
+      '</div>'+
+      (emp?
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<label style="font-size:12px;color:var(--muted2);white-space:nowrap">Add bookings ($)</label>'+
+          '<input type="number" id="att-wi-amt" value="'+(amt||'')+'" min="0" step="10000" placeholder="e.g. 200000" oninput="attSetWhatIfAmt(this.value)" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;width:150px;background:var(--card);color:var(--text);outline:none">'+
+        '</div>'
+      :'')+
+    '</div>'+
+    predHtml+
+  '</div>';
+}
+
+function attSelectEmp(name){
+  _attWhatIfEmp=name||null;
+  _attWhatIfAmt=0;
+  renderAttContent();
+  // scroll predictor into view
+  setTimeout(function(){var el=document.querySelector('#att-content .card');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
+}
+
+function attSetWhatIfAmt(val){
+  _attWhatIfAmt=parseFloat(val)||0;
+  // Re-render just the predictor panel and chart without full re-render for snappiness
+  var sortedRated=(ATTAINMENT_DATA[_attMonth]||[]).filter(function(e){return e.att!==null;}).sort(function(a,b){return b.att-a.att;});
+  var prLookup={};(PAY_RATE_DATA['Total YTD']||[]).forEach(function(e){prLookup[e.n]=e;});
+  var panelEl=document.querySelector('#att-content .card');
+  if(panelEl)panelEl.outerHTML=buildWhatIfPanel(sortedRated,prLookup);
+  drawAttChart(sortedRated,prLookup);
+}
+
+function drawAttChart(sortedRated,prLookup){
+  if(!sortedRated.length)return;
+  var baseData=sortedRated.map(function(e){return Math.round(e.att*10)/10;});
+  var baseColors=sortedRated.map(function(e){return ATT_COLORS[attBucket(e.att)];});
+  var datasets=[{data:baseData,backgroundColor:baseColors,borderRadius:2,label:'Attainment'}];
+
+  // Predicted increment bar for selected employee
+  if(_attWhatIfEmp&&_attWhatIfAmt>0){
+    var pr=prLookup[_attWhatIfEmp];
+    var booking=pr?pr.booking:0;
+    var emp=sortedRated.find(function(e){return e.n===_attWhatIfEmp;});
+    if(emp&&booking>0){
+      var predAtt=Math.round((emp.att*(booking+_attWhatIfAmt)/booking)*10)/10;
+      var predIncrement=Math.max(0,predAtt-emp.att);
+      var incrData=sortedRated.map(function(e){return e.n===_attWhatIfEmp?predIncrement:0;});
+      datasets.push({data:incrData,backgroundColor:'rgba(64,110,241,0.3)',borderRadius:2,label:'Predicted +',borderSkipped:false});
+    }
+  }
+
+  mkChart('attChart',{type:'bar',data:{labels:sortedRated.map(function(e){return e.n;}),datasets:datasets},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sortedRated[0]?sortedRated[0].att+20:100)},y:{stacked:true,grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
 }
 
 
