@@ -119,7 +119,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
 <aside>
   <div class="brand">
     <div class="brand-name">Skai Commissions</div>
-    <div class="brand-sub">2026 YTD · January – May</div>
+    <div class="brand-sub">2026 YTD · January – June (est.)</div>
     <div style="margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <button id="fmt-toggle" onclick="toggleFmFull()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">Full $</button>
       <button id="theme-toggle" onclick="toggleTheme()" style="padding:4px 11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer">☀️ Light</button>
@@ -226,7 +226,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     window._srActions=results.map(function(r){return r.action;});
   }
   var _lastSync=null;
-  var _liveViews={opps:1,oppnet:1,oppgap:1,attainment:1};
+  var _liveViews={overview:1,opps:1,oppnet:1,oppgap:1,attainment:1};
   function updateLastUpdatedBar(viewKey){
     var el=document.getElementById('last-updated-text');if(!el)return;
     if(_liveViews[viewKey]&&_lastSync){
@@ -3779,6 +3779,9 @@ const OPPS_GAP = [
 ];
 
 var _ovPlanMonth='Total',_ovChartMode='stacked';
+var _ovSelMonths=null; // null = All; Set of month keys when multi-select active
+window.JUNE_EST=null;
+window.JUNE_PLAN_DATA=null;
 var ytd25=2846629,full25=8542434,rampTotal=108292,rampEmps=[{n:'Larissa Moreira',v:26460},{n:'Roberta Silvana Martins Nahas',v:26000},{n:'Julie Olamit',v:17975},{n:'David Henson Bowen',v:17408},{n:'Michael Keaveny',v:10000},{n:'Paul Wainwright',v:2965},{n:'Peter Phillips',v:7484}];
 
 
@@ -3790,7 +3793,7 @@ var ATT_COLORS={sub40:'#FF8161',mid:'#FFB900',near:'#669AD2',over:'#406EF1','n/a
 var ATT_LABELS={sub40:'< 40%',mid:'40\u201385%',near:'85\u2013100%',over:'> 100%','n/a':'N/A'};
 
 function renderOverview(){
-  _ovPlanMonth='Total';
+  _ovSelMonths=null; // reset to All
   var months=MONTHLY_DATA,n=months.length;
   var firstM=months[0].d.split(' ')[0],lastM=months[n-1].d.split(' ')[0],yr=months[n-1].d.split(' ')[1];
   var GT={p24:0,p25:0,p26:0,t:0};months.forEach(function(m){GT.p24+=m.p24;GT.p25+=m.p25;GT.p26+=m.p26;GT.t+=m.t;});
@@ -3799,41 +3802,160 @@ function renderOverview(){
   var lastMonthPlans=Object.keys(lastMonthData.plans).filter(function(k){return lastMonthData.plans[k]>0;});
   var lastMonthEmps=(EMP_MONTHS[months[n-1].d]||[]).length;
   var lastEmpsByPlan={};(EMP_MONTHS[months[n-1].d]||[]).forEach(function(e){lastEmpsByPlan[e.pl]=(lastEmpsByPlan[e.pl]||0)+1;});
-  var planSource=getPlanData(_ovPlanMonth),planTotal=planSource.reduce(function(s,p){return s+p.t;},0);
-  var planRows='';
-  planSource.forEach(function(p){var pct=planTotal>0?(p.t/planTotal*100).toFixed(1):0,bw=planSource[0]&&planSource[0].t>0?(p.t/planSource[0].t*100).toFixed(1):0;planRows+='<tr><td class="fw">'+p.n+'</td><td class="num">'+(p.p24>0?fm(p.p24):'&mdash;')+'</td><td class="num">'+(p.p25>0?fm(p.p25):'&mdash;')+'</td><td class="num">'+fm(p.p26)+'</td><td class="num fw">'+fm(p.t)+'</td><td class="num">'+pct+'%<div class="bar"><div class="barf" style="width:'+bw+'%"></div></div></td></tr>';});
-  var planMonthTabs='<button class="tab active" onclick="setOvPlanMonth(\'Total\',this)">Total</button>';
-  months.forEach(function(m){planMonthTabs+='<button class="tab" onclick="setOvPlanMonth(\''+m.d+'\',this)">'+m.d+'</button>';});
   var planSubLines=lastMonthPlans.map(function(p){return p+' ('+(lastEmpsByPlan[p]||0)+')';}).join(' &middot; ');
   var rampSubLines=rampEmps.map(function(e){return e.n+': '+fm(e.v);}).join('<br>');
+
+  // June est. KPI
+  var junVal=window.JUNE_EST?window.JUNE_EST.t:null;
+  var junEmps=window.JUNE_EST?window.JUNE_EST.emps:0;
+  var junKpi='<div class="kpi" id="jun-est-kpi" style="border:1.5px dashed #1D9E75;border-top:3px solid #1D9E75">'+
+    '<div class="kpi-label" style="color:#0F6E56;display:flex;align-items:center;gap:5px">'+
+    '<span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>June 2026 (est.)</div>'+
+    '<div class="kpi-val" id="jun-est-val" style="color:#0F6E56">'+(junVal!==null?fm(junVal):'Syncing…')+'</div>'+
+    '<div class="kpi-sub" style="color:#0F6E56">'+(junVal!==null?junEmps+' employees · live opps':'Waiting for live sync')+'<br><span style="font-size:10px;opacity:.75">Preliminary · refreshes every 5 min</span></div></div>';
+
+  // Month tabs (multi-select)
+  var planMonthTabs='<button class="tab active" id="ovtab-all" onclick="ovToggleMonth(\'all\',this)">All</button>';
+  planMonthTabs+='<span style="display:inline-block;width:1px;height:18px;background:var(--border);margin:0 4px;vertical-align:middle"></span>';
+  months.forEach(function(m){
+    var key=m.d;
+    planMonthTabs+='<button class="tab" id="ovtab-'+key.replace(/ /g,'-')+'" onclick="ovToggleMonth(\''+key+'\',this)">'+m.d.replace(' 2026','')+'</button>';
+  });
+  if(window.JUNE_PLAN_DATA){
+    planMonthTabs+='<button class="tab" id="ovtab-jun" onclick="ovToggleMonth(\'jun\',this)" style="border-color:#1D9E75;color:#1D9E75">'+
+      '<span style="width:5px;height:5px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite;margin-right:4px;vertical-align:middle"></span>Jun (est.)</button>';
+  }
+
+  var planSource=getOvPlanData(),planTotal=planSource.confirmed.reduce(function(s,p){return s+p.t;},0)+(planSource.june||[]).reduce(function(s,p){return s+p.t;},0);
+  var planRows=buildOvPlanRows(planSource);
+
   document.getElementById('main').innerHTML=
-    '<div class="view"><div class="topbar"><div><div class="page-title">Overview</div><div class="page-sub">January &ndash; '+lastM+' '+yr+'</div></div></div>'+
+    '<div class="view"><div class="topbar"><div><div class="page-title">Overview</div>'+
+    '<div class="page-sub">January &ndash; '+lastM+' '+yr+(window.JUNE_EST?' &middot; June estimate live':'')+'</div></div></div>'+
     '<div class="kpi-grid">'+
-    '<div class="kpi g"><div class="kpi-label">January &ndash; '+lastM+' '+yr+' total</div><div class="kpi-val">'+fm(GT.t)+'</div><div class="kpi-sub"><span style="display:block">2026 actual: <strong>'+fm(GT.p26)+'</strong></span><span style="display:block">2025 Carryover: <strong>'+fm(GT.p25)+'</strong></span><span style="display:block">2024 Carryover: <strong>'+fm(GT.p24)+'</strong></span></div></div>'+
+    '<div class="kpi g"><div class="kpi-label">January &ndash; '+lastM+' '+yr+' confirmed</div><div class="kpi-val">'+fm(GT.t)+'</div><div class="kpi-sub"><span style="display:block">2026 actual: <strong>'+fm(GT.p26)+'</strong></span><span style="display:block">2025 Carryover: <strong>'+fm(GT.p25)+'</strong></span><span style="display:block">2024 Carryover: <strong>'+fm(GT.p24)+'</strong></span></div></div>'+
+    junKpi+
     '<div class="kpi b"><div class="kpi-label">2025 same period</div><div class="kpi-val">'+fm(ytd25)+'</div><div class="kpi-sub">Full 2025: <strong>'+fm(full25)+'</strong><br><span style="color:'+(GT.t>=ytd25?'#406EF1':'#FF8161')+';font-weight:600">'+(GT.t>=ytd25?'&uarr;':'&darr;')+' '+Math.abs(parseFloat(yoy)).toFixed(1)+'% YoY</span></div></div>'+
     '<div class="kpi a"><div class="kpi-label">Ramp payment '+firstM+'&ndash;'+lastM+'</div><div class="kpi-val">'+fm(rampTotal)+'</div><div class="kpi-sub" style="line-height:1.7">'+rampSubLines+'</div></div>'+
     '<div class="kpi a"><div class="kpi-label">Active plans &middot; '+months[n-1].d+'</div><div class="kpi-val">'+lastMonthPlans.length+'</div><div class="kpi-sub" style="line-height:1.6">'+planSubLines+'</div></div>'+
     '<div class="kpi gr"><div class="kpi-label">Employees &middot; '+months[n-1].d+'</div><div class="kpi-val">'+lastMonthEmps+'</div><div class="kpi-sub" style="line-height:1.6">74 active employees</div></div>'+
     '</div>'+
-    '<div class="card"><div class="card-header"><div class="card-title">Payments by plan &middot; January &ndash; '+lastM+' '+yr+'</div></div>'+
+    '<div class="card"><div class="card-header"><div class="card-title" id="plan-card-title">Payments by plan</div></div>'+
     '<div class="tabs" id="plan-month-tabs">'+planMonthTabs+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px" id="ov-sel-summary"></div>'+
     '<div class="tabs" id="plan-view-tabs"><button class="tab active" onclick="switchPlanChart(\'stacked\',this)">Stacked</button><button class="tab" onclick="switchPlanChart(\'grouped\',this)">Grouped</button></div>'+
-    '<div class="leg"><div class="li"><div class="sw" style="background:#A2D8EF"></div>2024 Carryover</div><div class="li"><div class="sw" style="background:#669AD2"></div>2025 Carryover</div><div class="li"><div class="sw" style="background:#406EF1"></div>2026</div></div>'+
-    '<div class="ch" style="height:'+(planSource.length*46+80)+'px"><canvas id="planChart"></canvas></div>'+
-    '<div class="tbl-wrap"><table><thead><tr><th>Plan</th><th class="num">2024 Carryover</th><th class="num">2025 Carryover</th><th class="num">2026</th><th class="num">Total</th><th class="num" style="width:90px">Share</th></tr></thead><tbody>'+planRows+
-    '<tr class="trow"><td>Total</td><td class="num">'+fm(planSource.reduce(function(s,p){return s+p.p24;},0))+'</td><td class="num">'+fm(planSource.reduce(function(s,p){return s+p.p25;},0))+'</td><td class="num">'+fm(planSource.reduce(function(s,p){return s+p.p26;},0))+'</td><td class="num">'+fm(planTotal)+'</td><td class="num">100%</td></tr>'+
-    '</tbody></table></div></div>'+
-    '<div class="grid2"><div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">2026 actual payments (excl. carryover)</div></div><div class="ch" style="height:220px"><canvas id="donutChart"></canvas></div></div>'+
-    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Year split</div></div><div class="ch" style="height:220px"><canvas id="yoyChart"></canvas></div></div></div>'+
+    '<div class="leg" id="ov-legend"><div class="li"><div class="sw" style="background:#A2D8EF"></div>2024 Carryover</div><div class="li"><div class="sw" style="background:#669AD2"></div>2025 Carryover</div><div class="li"><div class="sw" style="background:#406EF1"></div>2026</div></div>'+
+    '<div class="ch" style="height:'+(planSource.confirmed.length*46+80)+'px"><canvas id="planChart"></canvas></div>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Plan</th><th class="num">2024 Carryover</th><th class="num">2025 Carryover</th><th class="num">2026</th><th class="num fw">Total confirmed</th>'+(window.JUNE_PLAN_DATA?'<th class="num" style="color:#0F6E56">+ Jun (est.)</th><th class="num fw" style="color:#0F6E56">Grand total</th>':'')+
+    '<th class="num" style="width:90px">Share</th></tr></thead><tbody id="plan-tbody">'+planRows+'</tbody></table></div></div>'+
+    '<div class="grid2"><div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">2026 actual payments (excl. carryover) · Jan–May confirmed</div></div><div class="ch" style="height:220px"><canvas id="donutChart"></canvas></div></div>'+
+    '<div class="card" style="margin-bottom:0"><div class="card-header"><div class="card-title">Year split · Jan–May confirmed</div></div><div class="ch" style="height:220px"><canvas id="yoyChart"></canvas></div></div></div>'+
     '</div>';
+
+  updateOvSummary();
   drawPlanChart('stacked');
   var PIE_C=['#406EF1','#669AD2','#FFB900','#FF8161','#A2D8EF','#878F91','#111428','#b5c8f7','#ffd080'];
   mkChart('donutChart',{type:'doughnut',data:{labels:_PLANS_FULL.map(function(p){return p.n;}),datasets:[{data:_PLANS_FULL.map(function(p){return p.p26;}),backgroundColor:PIE_C,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{font:{size:10},color:TICK_COLOR,boxWidth:9,padding:7}}}}});
   mkChart('yoyChart',{type:'bar',data:{labels:['2024 Carryover','2025 Carryover','2026'],datasets:[{data:[GT.p24,GT.p25,GT.p26],backgroundColor:['#A2D8EF','#669AD2','#406EF1'],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:TICK_COLOR}},y:scaleOpts(function(v){return fm(v);})}}});
 }
 
+// Returns {confirmed: planArray, june: planArray|null} for the current multi-select state
+function getOvPlanData(){
+  var sel=_ovSelMonths; // null=All, Set of keys
+  var isAll=!sel;
+  var includeJun=isAll||(sel&&sel.has('jun'));
+  var confirmedKeys=isAll?MONTHLY_DATA.map(function(m){return m.d;}):
+    Array.from(sel).filter(function(k){return k!=='jun';});
+
+  // Aggregate confirmed months
+  var agg={};
+  confirmedKeys.forEach(function(key){
+    var src=getPlanData(key);
+    src.forEach(function(p){
+      if(!agg[p.n])agg[p.n]={n:p.n,p24:0,p25:0,p26:0,t:0};
+      agg[p.n].p24+=p.p24;agg[p.n].p25+=p.p25;agg[p.n].p26+=p.p26;agg[p.n].t+=p.t;
+    });
+  });
+  var confirmed=_PLANS_FULL.map(function(p){return agg[p.n]||{n:p.n,p24:0,p25:0,p26:0,t:0};})
+    .filter(function(p){return p.t>0;}).sort(function(a,b){return b.t-a.t;});
+  if(!confirmed.length)confirmed=_PLANS_FULL.slice();
+
+  var june=(includeJun&&window.JUNE_PLAN_DATA)?window.JUNE_PLAN_DATA:null;
+  return{confirmed:confirmed,june:june};
+}
+
+function buildOvPlanRows(src){
+  var confirmed=src.confirmed,june=src.june;
+  var junMap={};(june||[]).forEach(function(p){junMap[p.n]=p.t;});
+  var allPlans=confirmed.map(function(p){return p.n;});
+  (june||[]).forEach(function(p){if(allPlans.indexOf(p.n)<0)allPlans.push(p.n);});
+  var allData=allPlans.map(function(n){
+    var c=confirmed.find(function(p){return p.n===n;})||{n:n,p24:0,p25:0,p26:0,t:0};
+    return{n:n,p24:c.p24,p25:c.p25,p26:c.p26,conf:c.t,jun:junMap[n]||0,grand:c.t+(junMap[n]||0)};
+  }).sort(function(a,b){return b.grand-a.grand;});
+  var grandTotal=allData.reduce(function(s,p){return s+p.grand;},0);
+  var rows='';
+  allData.forEach(function(p){
+    if(!p.grand)return;
+    var pct=grandTotal>0?(p.grand/grandTotal*100).toFixed(1):0;
+    var bw=allData[0]&&allData[0].grand>0?(p.grand/allData[0].grand*100).toFixed(1):0;
+    rows+='<tr><td class="fw">'+p.n+'</td>'+
+      '<td class="num">'+(p.p24>0?fm(p.p24):'&mdash;')+'</td>'+
+      '<td class="num">'+(p.p25>0?fm(p.p25):'&mdash;')+'</td>'+
+      '<td class="num">'+fm(p.p26)+'</td>'+
+      '<td class="num fw">'+fm(p.conf)+'</td>'+
+      (june?'<td class="num" style="color:#0F6E56">'+(p.jun>0?'~'+fm(p.jun):'&mdash;')+'</td>'+
+            '<td class="num fw" style="color:#0F6E56">'+fm(p.grand)+'</td>':'') +
+      '<td class="num">'+pct+'%<div class="bar"><div class="barf" style="width:'+bw+'%"></div></div></td></tr>';
+  });
+  var confTotal=allData.reduce(function(s,p){return s+p.conf;},0);
+  var junTotal=allData.reduce(function(s,p){return s+p.jun;},0);
+  rows+='<tr class="trow"><td>Total</td>'+
+    '<td class="num">'+fm(allData.reduce(function(s,p){return s+p.p24;},0))+'</td>'+
+    '<td class="num">'+fm(allData.reduce(function(s,p){return s+p.p25;},0))+'</td>'+
+    '<td class="num">'+fm(allData.reduce(function(s,p){return s+p.p26;},0))+'</td>'+
+    '<td class="num">'+fm(confTotal)+'</td>'+
+    (june?'<td class="num" style="color:#0F6E56">~'+fm(junTotal)+'</td>'+
+           '<td class="num fw" style="color:#0F6E56">'+fm(grandTotal)+'</td>':'')+
+    '<td class="num">100%</td></tr>';
+  return rows;
+}
+
+function updateOvSummary(){
+  var sel=_ovSelMonths,el=document.getElementById('ov-sel-summary');if(!el)return;
+  if(!sel){el.textContent='Showing: All months (Jan – May confirmed'+(window.JUNE_PLAN_DATA?' + Jun est.':'')+'). Click a month to filter.';return;}
+  var labels=[];
+  sel.forEach(function(k){labels.push(k==='jun'?'Jun (est.)':k.replace(' 2026',''));});
+  el.innerHTML='Showing: <strong>'+labels.join(' + ')+'</strong> &nbsp;·&nbsp; Click months to add/remove. Click <strong>All</strong> to reset.';
+}
+
+function ovToggleMonth(key,btn){
+  if(key==='all'){
+    _ovSelMonths=null;
+    document.querySelectorAll('#plan-month-tabs .tab').forEach(function(t){t.classList.remove('active');});
+    document.getElementById('ovtab-all').classList.add('active');
+  } else {
+    if(!_ovSelMonths)_ovSelMonths=new Set();
+    document.getElementById('ovtab-all').classList.remove('active');
+    if(_ovSelMonths.has(key)){
+      _ovSelMonths.delete(key);
+      btn.classList.remove('active');
+      if(_ovSelMonths.size===0){_ovSelMonths=null;document.getElementById('ovtab-all').classList.add('active');}
+    } else {
+      _ovSelMonths.add(key);
+      btn.classList.add('active');
+    }
+  }
+  updateOvSummary();
+  var src=getOvPlanData();
+  document.getElementById('plan-tbody').innerHTML=buildOvPlanRows(src);
+  var mode=document.querySelector('#plan-view-tabs .tab.active');
+  drawPlanChart(mode&&mode.textContent==='Stacked'?'stacked':'grouped');
+}
+
 function getPlanData(ml){
-  if(ml==='Total')return _PLANS_FULL;
+  if(ml==='Total'||ml==='all')return _PLANS_FULL;
+  if(ml==='June 2026'||ml==='jun')return window.JUNE_PLAN_DATA||[];
   var MP={
     'January 2026':[{n:'Net New',p24:1838,p25:103049,p26:39369,t:144256},{n:'Sales Leadership',p24:0,p25:75003,p26:24034,t:99037},{n:'Agency',p24:16663,p25:38273,p26:20371,t:75307},{n:'Growth',p24:0,p25:12245,p26:49596,t:61841},{n:'CSD',p24:0,p25:3909,p26:38436,t:42345},{n:'CSD LEAD',p24:0,p25:330,p26:27397,t:27727},{n:'HoCo',p24:0,p25:18002,p26:4,t:18006},{n:'Industry Lead 2025',p24:0,p25:13438,p26:4050,t:17488},{n:'Head of Industry 2025',p24:0,p25:6318,p26:3823,t:10141}],
     'February 2026':[{n:'Net New',p24:3750,p25:120005,p26:320045,t:443800},{n:'Sales Leadership',p24:2821,p25:26623,p26:96640,t:126084},{n:'Agency',p24:3842,p25:43841,p26:20343,t:68026},{n:'Industry Lead 2025',p24:0,p25:31576,p26:21137,t:52713},{n:'Growth',p24:0,p25:12118,p26:40229,t:52347},{n:'CSD',p24:0,p25:10076,p26:39544,t:49620},{n:'Head of Industry 2025',p24:0,p25:23163,p26:19538,t:42701},{n:'CSD LEAD',p24:0,p25:563,p26:29149,t:29712},{n:'HoCo',p24:0,p25:8696,p26:657,t:9353}],
@@ -3850,7 +3972,36 @@ function setOvPlanMonth(m,btn){
   var tb=document.querySelector('#main .tbl-wrap tbody');if(tb)tb.innerHTML=pr+'<tr class="trow"><td>Total</td><td class="num">'+fm(ps.reduce(function(s,p){return s+p.p24;},0))+'</td><td class="num">'+fm(ps.reduce(function(s,p){return s+p.p25;},0))+'</td><td class="num">'+fm(ps.reduce(function(s,p){return s+p.p26;},0))+'</td><td class="num">'+fm(pt)+'</td><td class="num">100%</td></tr>';
   var mode=document.querySelector('#plan-view-tabs .tab.active');drawPlanChart(mode&&mode.textContent==='Stacked'?'stacked':'grouped',ps);
 }
-function drawPlanChart(mode,ds){var plans=ds||getPlanData(_ovPlanMonth);mkChart('planChart',{type:'bar',data:{labels:plans.map(function(p){return p.n;}),datasets:[{label:'2024 Carryover',data:plans.map(function(p){return p.p24;}),backgroundColor:'#A2D8EF'},{label:'2025 Carryover',data:plans.map(function(p){return p.p25;}),backgroundColor:'#669AD2'},{label:'2026',data:plans.map(function(p){return p.p26;}),backgroundColor:'#406EF1'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:mode==='stacked',grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}},y:{stacked:mode==='stacked',grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});}
+function drawPlanChart(mode,ds){
+  var src=ds||getOvPlanData();
+  var confirmed=src.confirmed||src; // backwards compat if ds passed directly
+  var june=(src.june)||null;
+  // Build unified plan label list
+  var planNames=confirmed.map(function(p){return p.n;});
+  (june||[]).forEach(function(p){if(planNames.indexOf(p.n)<0)planNames.push(p.n);});
+  var junMap={};(june||[]).forEach(function(p){junMap[p.n]=p.t;});
+  var confMap={};confirmed.forEach(function(p){confMap[p.n]=p;});
+  // Sort by grand total desc
+  planNames.sort(function(a,b){
+    var ta=(confMap[a]?confMap[a].t:0)+(junMap[a]||0);
+    var tb=(confMap[b]?confMap[b].t:0)+(junMap[b]||0);
+    return tb-ta;
+  });
+  var p24d=planNames.map(function(n){return confMap[n]?confMap[n].p24:0;});
+  var p25d=planNames.map(function(n){return confMap[n]?confMap[n].p25:0;});
+  var p26d=planNames.map(function(n){return confMap[n]?confMap[n].p26:0;});
+  var jund=june?planNames.map(function(n){return junMap[n]||0;}):null;
+  var datasets=[
+    {label:'2024 Carryover',data:p24d,backgroundColor:'#A2D8EF'},
+    {label:'2025 Carryover',data:p25d,backgroundColor:'#669AD2'},
+    {label:'2026 confirmed',data:p26d,backgroundColor:'#406EF1'}
+  ];
+  if(jund)datasets.push({label:'Jun est.',data:jund,backgroundColor:'#5DCAA5',borderRadius:3});
+  // Update legend
+  var leg=document.getElementById('ov-legend');
+  if(leg)leg.innerHTML='<div class="li"><div class="sw" style="background:#A2D8EF"></div>2024 Carryover</div><div class="li"><div class="sw" style="background:#669AD2"></div>2025 Carryover</div><div class="li"><div class="sw" style="background:#406EF1"></div>2026 confirmed</div>'+(june?'<div class="li"><div class="sw" style="background:#5DCAA5;border:1px dashed #1D9E75"></div>Jun (est.)</div>':'');
+  mkChart('planChart',{type:'bar',data:{labels:planNames,datasets:datasets},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:mode==='stacked',grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}},y:{stacked:mode==='stacked',grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+}
 function switchPlanChart(mode,btn){document.querySelectorAll('#plan-view-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');drawPlanChart(mode);}
 
 function renderTrend(){
@@ -5449,6 +5600,32 @@ function syncFromWebApp(){
       var _now=new Date();_lastSync=_now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+_now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
       var activeNav=document.querySelector('.nav-btn.active');var activeView=activeNav?activeNav.getAttribute('onclick').match(/nav\('(\w+)'/):null;if(activeView)updateLastUpdatedBar(activeView[1]);
       computeJuneEst(opps, ALIASES);
+
+      // ── Build June estimate plan + employee data ───────────────────────────
+      try {
+        var PLAN_NORM={'Industry Lead':'Industry Lead 2025','Head of Industry':'Head of Industry 2025'};
+        var junPlanTotals={},junEmpTotals={},junTotal=0;
+        opps.forEach(function(o){
+          if(o.month!=='June 2026')return;
+          var plan=PLAN_NORM[o.plan]||o.plan;
+          var pay=(o.comm||0)+(o.oaBonus||0)+(o.bbSpiff||0)+(o.lpSpiff||0)+(o.h1Spiff||0)+(o.mySpiff||0)+(o.exSpiff||0)+(o.pgSpiff||0)+(o.naSpiff||0)+(o.hcSpiff||0);
+          junPlanTotals[plan]=(junPlanTotals[plan]||0)+pay;
+          var res=ALIASES[o.emp]||o.emp;
+          junEmpTotals[res]=(junEmpTotals[res]||0)+pay;
+          junTotal+=pay;
+        });
+        window.JUNE_PLAN_DATA=_PLANS_FULL.map(function(p){
+          return{n:p.n,p24:0,p25:0,p26:Math.round(junPlanTotals[p.n]||0),t:Math.round(junPlanTotals[p.n]||0)};
+        }).filter(function(p){return p.t>0;}).sort(function(a,b){return b.t-a.t;});
+        var junEmpArr=EMPLOYEES.map(function(e){
+          var v=Math.round(junEmpTotals[e.n]||0);
+          return{n:e.n,pl:e.pl,mgr:e.mgr,p24:0,p25:0,p26:v,t:v};
+        }).filter(function(e){return e.t>0;}).sort(function(a,b){return b.t-a.t;});
+        if(junEmpArr.length>0)EMP_MONTHS['June 2026']=junEmpArr;
+        window.JUNE_EST={d:'June 2026',p24:0,p25:0,p26:Math.round(junTotal),t:Math.round(junTotal),booking:0,comm_excl_csd:0,emps:junEmpArr.length,est:true,plans:junPlanTotals};
+        console.log('June est. total:',Math.round(junTotal),'across',junEmpArr.length,'employees');
+        if(document.getElementById('jun-est-val'))renderOverview();
+      } catch(e){console.error('June plan build error:',e);}
 
       // ── Build NET_OPP_DATA from Opportunities tab ──────────────────────────
       try {
