@@ -5364,7 +5364,7 @@ function _buildGapsData() {
   var byOpp={};
   _oppsData.forEach(function(o){
     if(!o.opp)return;
-    var k=o.opp.trim().toLowerCase();
+    var k=(o.id&&o.id!=='')?o.id:o.opp.trim().toLowerCase();
     if(!byOpp[k])byOpp[k]=[];
     byOpp[k].push(o);
   });
