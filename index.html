@@ -5165,10 +5165,10 @@ function renderOpps(){
 }
 function setOppMonth(m,btn){_oppMonth=m;document.querySelectorAll('#opp-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderOppContent();}
 function _filterSellerOpps(arr){
-  var EXCL={'Sales Leadership':1,'Head of Industry':1,'Industry Lead':1};
+  var SELLER={'Net New':1,'Agency':1,'Growth':1,'HoCo':1};
   var hasSellerRow={};
-  arr.forEach(function(o){if(!EXCL[o.plan])hasSellerRow[o.opp]=1;});
-  return arr.filter(function(o){return !EXCL[o.plan]||!hasSellerRow[o.opp];});
+  arr.forEach(function(o){if(SELLER[o.plan])hasSellerRow[o.opp]=1;});
+  return arr.filter(function(o){return SELLER[o.plan]||!hasSellerRow[o.opp];});
 }
 function renderOppContent(){
   var opps=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
