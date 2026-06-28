@@ -5730,7 +5730,6 @@ function syncFromWebApp(){
       if(json.error)throw new Error('Web App error: '+json.error);
       var rawRows=json.rows||[];
       if(rawRows.length<10)return;
-      console.log('Web app fields:', Object.keys(rawRows[0]));
       var opps=rawRows.map(function(r){
         var emp=r.emp||'',resolved=ALIASES[emp]||emp;
         var month=(r.month||'')+' '+(r.year||'');
