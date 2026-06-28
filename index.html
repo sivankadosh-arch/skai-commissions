@@ -4667,7 +4667,7 @@ function renderLiveAtt(){
   _liveAttPlan='all';_liveAttRole='all';_liveAttSearch='';
   var planSet={};opps.forEach(function(o){if(o.plan&&o.plan!=='CSD'&&o.plan!=='CSD LEAD')planSet[o.plan]=1;});
   var plansList=Object.keys(planSet).sort();
-  var mTabs=avail.map(function(m){var lbl=m==='June 2026'?'Jun (est.) 🔄':m.replace(' 2026','');return '<button class="tab'+(m===_liveAttMonth?' active':'')+'" onclick="setLiveAttMonth(\''+m+'\',this)">'+lbl+'</button>';}).join('');
+  var mTabs=avail.map(function(m){var lbl=m==='June 2026'?'June 2026 (est.) 🔄':m;return '<button class="tab'+(m===_liveAttMonth?' active':'')+'" onclick="setLiveAttMonth(\''+m+'\',this)">'+lbl+'</button>';}).join('');
   var pTabs='<button class="tab active" onclick="setLiveAttPlan(\'all\',this)">All plans</button>'+plansList.map(function(p){return '<button class="tab" onclick="setLiveAttPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';}).join('');
   var rTabs='<button class="tab active" onclick="setLiveAttRole(\'all\',this)">All</button><button class="tab" onclick="setLiveAttRole(\'mgr\',this)">Managers</button><button class="tab" onclick="setLiveAttRole(\'rep\',this)">Non-managers</button>';
   document.getElementById('main').innerHTML=
