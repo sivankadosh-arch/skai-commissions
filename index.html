@@ -6000,6 +6000,8 @@ function nav(view,btn){
   btn.classList.add('active');
   VIEW_MAP[view]();
   updateLastUpdatedBar(view);
+  var banner=document.getElementById('draft-banner');
+  if(banner)banner.style.display=view==='liveatt'?'none':'flex';
 }
 renderOverview();
 
