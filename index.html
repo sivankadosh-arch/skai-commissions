@@ -4650,7 +4650,7 @@ function _buildLiveAttMonthData(opps,month){
     if(included.indexOf(o.month)>=0&&!planByEmp[n]){planByEmp[n]=o.plan||'';mgrByEmp[n]=o.mgr||'';}
     var q=o.quota||0;
     if(q>0&&(!(n in quotaByEmp)||q>quotaByEmp[n]))quotaByEmp[n]=q;
-    if(included.indexOf(o.month)>=0)actualByEmp[n]=(actualByEmp[n]||0)+o.bk*(o.split/100);
+    if(included.indexOf(o.month)>=0)actualByEmp[n]=(actualByEmp[n]||0)+o.bk;
   });
   var rows=[];
   Object.keys(planByEmp).forEach(function(n){
@@ -4856,7 +4856,7 @@ function openLiveDrawer(empName){
   var empOpps=opps.filter(function(o){return o.emp===empName&&included.indexOf(o.month)>=0;})
     .sort(function(a,b){return LIVE_ATT_MONTHS.indexOf(a.month)-LIVE_ATT_MONTHS.indexOf(b.month);});
 
-  var totalBk=empOpps.reduce(function(s,o){return s+o.bk*(o.split/100);},0);
+  var totalBk=empOpps.reduce(function(s,o){return s+o.bk;},0);
   var totalAcv=empOpps.reduce(function(s,o){return s+o.acv;},0);
 
   var seen={},grouped=[];
