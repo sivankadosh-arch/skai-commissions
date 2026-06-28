@@ -5177,7 +5177,7 @@ function renderOppContent(){
   var _oppGroups={};
   opps.filter(function(o){return o.bk>0;}).forEach(function(o){
     var key=(o.id&&o.id!==''?o.id:o.opp.trim().toLowerCase())+'|'+o.month;
-    var full=o.split>0?Math.round(o.bk*100/o.split):o.bk;
+    var full=o.split>0?(o.bk*100/o.split):o.bk;
     if(!_oppGroups[key]||full>_oppGroups[key].full)_oppGroups[key]={full:full,book:o.book,type:o.type};
   });
   var totalBk=Object.keys(_oppGroups).reduce(function(s,k){return s+_oppGroups[k].full;},0);
