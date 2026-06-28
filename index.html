@@ -5284,25 +5284,38 @@ function renderOppContent(){
   var sharedHtml = '';
   if(sharedOpps.length){
     var sharedRows='';
-    sharedOpps.forEach(function(g){
+    sharedOpps.forEach(function(g,gi){
       var tc=TYPE_C[g.type]||'#878F91', bc=g.book==='Platform'?'#406EF1':'#878F91';
-      // First row spans the opp name
-      g.reps.forEach(function(r,i){
-        sharedRows+='<tr>'+
-          (i===0?'<td class="fw" style="font-size:12px;vertical-align:top" rowspan="'+g.reps.length+'">'+g.opp+
-            '<div><span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px;background:'+tc+'18;color:'+tc+'">'+g.type+'</span>'+
-            '<span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px;background:'+bc+'18;color:'+bc+';margin-left:3px">'+g.book+'</span></div></td>':'')+
-          '<td style="font-size:11px;color:var(--muted2)">'+r.emp+'</td>'+
-          '<td style="font-size:11px;color:var(--muted2)">'+r.plan+'</td>'+
-          '<td class="num">'+fm(r.bk)+'</td>'+
-          '<td class="num" style="font-size:11px;color:var(--muted2)">'+r.month+'</td>'+
-          '</tr>';
+      var grpBg=gi%2===0?'#ffffff':'#F8FAFC';
+      var n=g.reps.length;
+      g.reps.forEach(function(r,ri){
+        var splitBadge=r.split&&r.split<100?'<span style="font-size:9px;font-weight:600;background:#FFB90022;color:#b08400;padding:1px 5px;border-radius:4px;margin-left:4px">'+r.split+'%</span>':'';
+        var bottomBorder=ri===n-1?'border-bottom:2px solid #E8EEF0':'';
+        sharedRows+='<tr style="background:'+grpBg+';border-left:3px solid '+tc+';'+bottomBorder+'">';
+        if(ri===0){
+          sharedRows+=
+            '<td style="width:32px;color:var(--muted);font-size:11px;padding-left:10px;vertical-align:top" rowspan="'+n+'">'+(gi+1)+'</td>'+
+            '<td class="fw" style="font-size:12px;max-width:220px;line-height:1.5;vertical-align:top" rowspan="'+n+'">'+g.opp+
+              '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'+
+                '<span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+g.type+'</span>'+
+                '<span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+g.book+'</span>'+
+              '</div>'+
+            '</td>'+
+            '<td style="font-size:10px;vertical-align:top" rowspan="'+n+'"><span style="background:'+(MONTH_ROW_C[r.month.split(' ')[0]]||'#F0F0F0')+';padding:2px 7px;border-radius:6px;color:var(--night);font-weight:600">'+r.month+'</span></td>';
+        }
+        sharedRows+=
+          '<td class="num fw" style="color:#406EF1;font-size:13px">'+fm(r.bk)+splitBadge+'</td>'+
+          '<td style="font-size:11px"><span style="font-weight:600;color:var(--night)">'+r.emp+'</span></td>'+
+          '<td style="font-size:10px;color:var(--muted2)">'+r.plan+'</td>'+
+          '<td style="font-size:10px;color:var(--muted2)">'+r.mgr+'</td>'+
+        '</tr>';
       });
     });
     sharedHtml='<div class="card"><div class="card-header">'+
-      '<div class="card-title">Shared opportunities · Split only</div></div>'+
-      '<div class="tbl-wrap"><table>'+
-      '<thead><tr><th>Opportunity</th><th>Employee</th><th>Plan</th><th class="num">Bookings</th><th>Month</th></tr></thead>'+
+      '<div class="card-title">Shared opportunities · Split only</div>'+
+      '<div style="font-size:12px;color:var(--muted2)">'+sharedOpps.length+' opps</div></div>'+
+      '<div class="tbl-wrap"><table style="border-collapse:collapse">'+
+      '<thead><tr style="background:#F4F7FB"><th style="width:32px"></th><th>Opportunity</th><th>Month</th><th class="num">Bookings</th><th>Employee</th><th>Plan</th><th>Manager</th></tr></thead>'+
       '<tbody>'+sharedRows+'</tbody>'+
       '</table></div></div>';
   }
