@@ -4735,7 +4735,7 @@ function renderLiveAttContent(){
     '<div class="kpi g"><div class="kpi-label">Above 100%</div><div class="kpi-val" style="color:#406EF1">'+counts.over+'</div><div class="kpi-sub">'+(total?(counts.over/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi b"><div class="kpi-label">Avg attainment</div><div class="kpi-val">'+avg+'%</div></div></div>'+
     h1Card+wiPanel+
-    '<div class="card"><div class="card-header"><div class="card-title">Attainment by employee — '+_liveAttMonth+'</div></div>'+
+    '<div class="card"><div class="card-header"><div><div class="card-title">Attainment by employee — '+_liveAttMonth+'</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">💡 Click a bar to see opportunity details</div></div></div>'+
     '<div class="ch" style="height:'+Math.max(sorted.length*28+60,200)+'px"><canvas id="liveAttChart"></canvas></div></div>'+
     '<div class="card"><div class="card-header" style="justify-content:space-between;align-items:center">'+
       '<div><div class="card-title">Employee detail</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">💡 Click a name to see opportunity details</div></div>'+
