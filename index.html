@@ -5182,9 +5182,15 @@ function renderOppContent(){
   });
   var totalBk=Object.keys(_oppGroups).reduce(function(s,k){return s+_oppGroups[k].full;},0);
   var nOpps=Object.keys(_oppGroups).length;
-  var empBk={};
-  opps.forEach(function(o){ empBk[o.emp]=(empBk[o.emp]||0)+o.bk; });
+  var empBk={},empTopOpp={},empTopOppBk={};
+  opps.forEach(function(o){
+    empBk[o.emp]=(empBk[o.emp]||0)+o.bk;
+    if(o.bk>0&&(!empTopOppBk[o.emp]||o.bk>empTopOppBk[o.emp])){empTopOppBk[o.emp]=o.bk;empTopOpp[o.emp]=o.opp;}
+  });
   var topSeller='—',topBk=0;Object.keys(empBk).forEach(function(e){if(empBk[e]>topBk){topBk=empBk[e];topSeller=e;}});
+  var topSellerOpp=empTopOpp[topSeller]||'';
+  var topSellerOppBk=empTopOppBk[topSeller]||0;
+  var topSellerOppShort=topSellerOpp.replace(/[-–]\s*(Net-New|Upsale|Renewal|Pilot|Conversion|Adv|Agc|Adv-platform|Agc-platform|WON).*$/i,'').trim();
   var platBk=Object.keys(_oppGroups).filter(function(k){return _oppGroups[k].book==='Platform';}).reduce(function(s,k){return s+_oppGroups[k].full;},0);
   var legBk=Object.keys(_oppGroups).filter(function(k){return _oppGroups[k].book==='Legacy';}).reduce(function(s,k){return s+_oppGroups[k].full;},0);
   var byType={};Object.keys(_oppGroups).forEach(function(k){var t=_oppGroups[k].type;byType[t]=(byType[t]||0)+_oppGroups[k].full;});
@@ -5210,7 +5216,7 @@ function renderOppContent(){
   var kpis='<div class="kpi g"><div class="kpi-label">Total Monthly Incremental Bookings</div><div class="kpi-val">'+fm(totalBk)+'</div><div class="kpi-sub">'+nOpps+' opps · unique deals</div></div>'+
   '<div class="kpi" style="border-top:3px solid #5DCAA5"><div class="kpi-label">Bookings incl. splits</div><div class="kpi-val" style="color:#2a9d74">'+fm(splitBk)+'</div><div class="kpi-sub">sum of all seller credits</div></div>'+
   (totalAcv>0?'<div class="kpi" style="border-top:3px solid #406EF1"><div class="kpi-label">ACV</div><div class="kpi-val">'+fm(totalAcv)+'</div><div class="kpi-sub">annual contract value</div></div>':'')+
-  '<div class="kpi g"><div class="kpi-label">Top seller</div><div class="kpi-val" style="font-size:16px">'+topSeller+'</div><div class="kpi-sub">'+fm(topBk)+'</div></div><div class="kpi b"><div class="kpi-label">Platform</div><div class="kpi-val">'+fm(platBk)+'</div><div class="kpi-sub">'+(totalBk>0?(platBk/totalBk*100).toFixed(0):0)+'%</div></div><div class="kpi b"><div class="kpi-label">Legacy</div><div class="kpi-val">'+fm(legBk)+'</div><div class="kpi-sub">'+(totalBk>0?(legBk/totalBk*100).toFixed(0):0)+'%</div></div>';
+  '<div class="kpi g"><div class="kpi-label">Top seller</div><div class="kpi-val" style="font-size:16px">'+topSeller+'</div><div class="kpi-sub">'+fm(topBk)+(topSellerOppShort?'<br><span style="font-size:10px;opacity:.8">'+topSellerOppShort+' · '+fm(topSellerOppBk)+'</span>':'')+'</div></div><div class="kpi b"><div class="kpi-label">Platform</div><div class="kpi-val">'+fm(platBk)+'</div><div class="kpi-sub">'+(totalBk>0?(platBk/totalBk*100).toFixed(0):0)+'%</div></div><div class="kpi b"><div class="kpi-label">Legacy</div><div class="kpi-val">'+fm(legBk)+'</div><div class="kpi-sub">'+(totalBk>0?(legBk/totalBk*100).toFixed(0):0)+'%</div></div>';
   var t5rows='';top5.forEach(function(g,i){var tc=TYPE_C[g.type]||'#878F91',bc=g.book==='Platform'?'#406EF1':'#878F91';t5rows+='<tr><td><span class="rk '+(i===0?'gold':i===1?'silver':i===2?'bronze':'')+'">'+(i+1)+'</span></td><td class="fw" style="font-size:12px;max-width:200px">'+g.opp+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+tc+'18;color:'+tc+'">'+g.type+'</span></td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:'+bc+'18;color:'+bc+'">'+g.book+'</span></td><td class="num fw" style="color:#406EF1">'+fm(g.fullBk)+'</td><td style="font-size:11px;color:var(--muted2)">'+g.emps.join(', ')+'</td></tr>';});
   // ── All opps (unfiltered by role) ────────────────────────────────
   var allOppsForTable=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
