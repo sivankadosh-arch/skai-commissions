@@ -5173,21 +5173,13 @@ function _filterSellerOpps(arr){
 function renderOppContent(){
   var opps=_oppMonth==='Total'?_oppsData:_oppsData.filter(function(o){return o.month===_oppMonth;});
   opps=_filterSellerOpps(opps);
-  // Deduplicate by opp name — count each unique deal once at full value (bk*100/split)
-  var _oppBkGroups={};
-  opps.filter(function(o){return o.bk>0;}).forEach(function(o){
-    var key=o.opp.trim().toLowerCase();
-    var full=o.split>0?Math.round(o.bk*100/o.split):o.bk;
-    if(!_oppBkGroups[key]||full>_oppBkGroups[key].full)_oppBkGroups[key]={full:full,book:o.book,type:o.type};
-  });
-  var totalBk=Object.keys(_oppBkGroups).reduce(function(s,k){return s+_oppBkGroups[k].full;},0);
-  var nOpps=Object.keys(_oppBkGroups).length;
+  var totalBk=opps.reduce(function(s,o){return s+o.bk;},0),nOpps=opps.filter(function(o){return o.bk>0;}).length;
   var empBk={};
   opps.forEach(function(o){ empBk[o.emp]=(empBk[o.emp]||0)+o.bk; });
   var topSeller='—',topBk=0;Object.keys(empBk).forEach(function(e){if(empBk[e]>topBk){topBk=empBk[e];topSeller=e;}});
-  var platBk=Object.keys(_oppBkGroups).filter(function(k){return _oppBkGroups[k].book==='Platform';}).reduce(function(s,k){return s+_oppBkGroups[k].full;},0);
-  var legBk=Object.keys(_oppBkGroups).filter(function(k){return _oppBkGroups[k].book==='Legacy';}).reduce(function(s,k){return s+_oppBkGroups[k].full;},0);
-  var byType={};Object.keys(_oppBkGroups).forEach(function(k){var t=_oppBkGroups[k].type;byType[t]=(byType[t]||0)+_oppBkGroups[k].full;});
+  var platBk=opps.filter(function(o){return o.book==='Platform';}).reduce(function(s,o){return s+o.bk;},0);
+  var legBk=opps.filter(function(o){return o.book==='Legacy';}).reduce(function(s,o){return s+o.bk;},0);
+  var byType={};opps.forEach(function(o){if(o.bk>0)byType[o.type]=(byType[o.type]||0)+o.bk;});
   var typeKeys=Object.keys(byType).sort(function(a,b){return byType[b]-byType[a];});
   var TYPE_C={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Other':'#878F91'};
   // Top 5 — grouped by opp name, full 100% booking, all credited sellers
