@@ -4699,6 +4699,7 @@ function renderLiveAttContent(){
   });
   var rated=filtered.filter(function(e){return e.att!==null;});
   var naList=filtered.filter(function(e){return e.att===null;});
+  var zeroList=rated.filter(function(e){return e.att===0;});
   var total=rated.length;
   var avg=total?(rated.reduce(function(s,e){return s+e.att;},0)/total).toFixed(1):'—';
   var counts={sub40:0,mid:0,near:0,over:0};
@@ -4732,7 +4733,7 @@ function renderLiveAttContent(){
   var wiPanel=buildLiveWhatIfPanel(sorted);
   document.getElementById('liveatt-content').innerHTML=liveBanner+
     '<div class="kpi-grid">'+
-    '<div class="kpi gr"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+naList.length+' no quota</div></div>'+
+    '<div class="kpi gr"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+(zeroList.length?'0% attainment: '+zeroList.map(function(e){return e.n.split(' ')[0];}).join(', '):'All have bookings')+'</div></div>'+
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Below 40%</div><div class="kpi-val" style="color:#FF8161">'+counts.sub40+'</div><div class="kpi-sub">'+(total?(counts.sub40/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi" style="border-top:3px solid #FFB900"><div class="kpi-label">40–85%</div><div class="kpi-val" style="color:#b08400">'+counts.mid+'</div><div class="kpi-sub">'+(total?(counts.mid/total*100).toFixed(0):0)+'%</div></div>'+
     '<div class="kpi" style="border-top:3px solid #669AD2"><div class="kpi-label">85–100%</div><div class="kpi-val" style="color:#185FA5">'+counts.near+'</div><div class="kpi-sub">'+(total?(counts.near/total*100).toFixed(0):0)+'%</div></div>'+
