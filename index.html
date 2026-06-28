@@ -4747,6 +4747,7 @@ function renderLiveAttContent(){
   },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
 }
 function openLiveDrawer(empName){
+  var TC={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Other':'#878F91','Transfer':'#878F91'};
   var opps=window._liveAttRaw||_oppsData||[];
   var monthIdx=LIVE_ATT_MONTHS.indexOf(_liveAttMonth);
   var included=LIVE_ATT_MONTHS.slice(0,monthIdx+1);
@@ -4756,7 +4757,6 @@ function openLiveDrawer(empName){
   var totalBk=empOpps.reduce(function(s,o){return s+o.bk*(o.split/100);},0);
   var totalAcv=empOpps.reduce(function(s,o){return s+o.acv;},0);
 
-  // Group by opp (same opp may appear for multiple months — use id or name)
   var seen={},grouped=[];
   empOpps.forEach(function(o){
     var k=o.id||o.opp.trim().toLowerCase();
@@ -4765,7 +4765,7 @@ function openLiveDrawer(empName){
 
   var rows='';
   grouped.forEach(function(o){
-    var tc=TYPE_C&&TYPE_C[o.type]?TYPE_C[o.type]:'#878F91';
+    var tc=TC[o.type]||'#878F91';
     rows+='<tr>'+
       '<td style="font-size:12px;max-width:180px;word-break:break-word">'+o.opp+'</td>'+
       '<td style="font-size:11px"><span style="background:'+tc+'18;color:'+tc+';padding:2px 7px;border-radius:8px;font-weight:600;font-size:10px">'+o.type+'</span></td>'+
