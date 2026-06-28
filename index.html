@@ -137,6 +137,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" onclick="nav('leaders',this)"><span class="icon">🏆</span>Top earners</button>
     <button class="nav-btn" onclick="nav('managers',this)"><span class="icon">👥</span>Manager rollup</button>
     <button class="nav-btn" onclick="nav('attainment',this)"><span class="icon">🎯</span>Attainment</button>
+    <button class="nav-btn" onclick="nav('liveatt',this)"><span class="icon">📡</span>Live Attainment</button>
     <button class="nav-btn" onclick="nav('payrate',this)"><span class="icon">💰</span>Pay rate</button>
     <div class="nav-section">Compensation</div>
     <button class="nav-btn" onclick="nav('csd',this)"><span class="icon">📋</span>CSD analysis</button>
@@ -227,7 +228,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     window._srActions=results.map(function(r){return r.action;});
   }
   var _lastSync=null;
-  var _liveViews={overview:1,opps:1,oppnet:1,oppgap:1,attainment:1};
+  var _liveViews={overview:1,opps:1,oppnet:1,oppgap:1,attainment:1,liveatt:1};
   function updateLastUpdatedBar(viewKey){
     var el=document.getElementById('last-updated-text');if(!el)return;
     if(_liveViews[viewKey]&&_lastSync){
@@ -4591,6 +4592,121 @@ function selectMgr(name) {
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
 var _attMonth='June 2026',_attPlan='all',_attRole='all';
 var _attEmpSearch='',_attWhatIfEmp=null,_attWhatIfAmt=0;
+// ── Live Attainment view ──────────────────────────────────────────────────────
+var _liveAttMonth='May 2026',_liveAttPlan='all',_liveAttRole='all',_liveAttSearch='';
+var LIVE_ATT_MONTHS=['January 2026','February 2026','March 2026','April 2026','May 2026','June 2026'];
+
+function _buildLiveAttMonthData(opps,month){
+  var quotaByEmp={},planByEmp={},mgrByEmp={},actualByEmp={};
+  opps.forEach(function(o){
+    var n=o.emp;if(!n)return;
+    if(!planByEmp[n]){planByEmp[n]=o.plan||'';mgrByEmp[n]=o.mgr||'';}
+    if(o.quota>0&&(!(n in quotaByEmp)||o.quota>quotaByEmp[n]))quotaByEmp[n]=o.quota;
+    if(o.month===month)actualByEmp[n]=(actualByEmp[n]||0)+o.bk*(o.split/100);
+  });
+  var rows=[];
+  Object.keys(planByEmp).forEach(function(n){
+    var pl=planByEmp[n];
+    if(pl==='CSD'||pl==='CSD LEAD')return;
+    var actual=actualByEmp[n]||0;
+    var annualQ=quotaByEmp[n]||0;
+    var monthlyQ=annualQ>0?annualQ/12:0;
+    var att=monthlyQ>0?(actual/monthlyQ*100):null;
+    rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(monthlyQ),att:att!==null?Math.round(att*10)/10:null});
+  });
+  return rows;
+}
+
+function renderLiveAtt(){
+  var opps=window._liveAttRaw||_oppsData||[];
+  var avail=LIVE_ATT_MONTHS.filter(function(m){return opps.some(function(o){return o.month===m;});});
+  _liveAttMonth=avail.indexOf('June 2026')>=0?'June 2026':(avail[avail.length-1]||'May 2026');
+  _liveAttPlan='all';_liveAttRole='all';_liveAttSearch='';
+  var planSet={};opps.forEach(function(o){if(o.plan&&o.plan!=='CSD'&&o.plan!=='CSD LEAD')planSet[o.plan]=1;});
+  var plansList=Object.keys(planSet).sort();
+  var mTabs=avail.map(function(m){var lbl=m==='June 2026'?'Jun (est.) 🔄':m.replace(' 2026','');return '<button class="tab'+(m===_liveAttMonth?' active':'')+'" onclick="setLiveAttMonth(\''+m+'\',this)">'+lbl+'</button>';}).join('');
+  var pTabs='<button class="tab active" onclick="setLiveAttPlan(\'all\',this)">All plans</button>'+plansList.map(function(p){return '<button class="tab" onclick="setLiveAttPlan(\''+p.replace(/'/g,"\\'")+'\',this)">'+p+'</button>';}).join('');
+  var rTabs='<button class="tab active" onclick="setLiveAttRole(\'all\',this)">All</button><button class="tab" onclick="setLiveAttRole(\'mgr\',this)">Managers</button><button class="tab" onclick="setLiveAttRole(\'rep\',this)">Non-managers</button>';
+  document.getElementById('main').innerHTML=
+    '<div class="view"><div class="topbar"><div><div class="page-title">Live Attainment</div>'+
+    '<div class="page-sub">Bookings quota attainment · computed from live sheet data</div></div></div>'+
+    '<div class="tabs" id="liveatt-month-tabs">'+mTabs+'</div>'+
+    '<div class="tabs" id="liveatt-plan-tabs">'+pTabs+'</div>'+
+    '<div class="tabs" id="liveatt-role-tabs">'+rTabs+'</div>'+
+    '<div id="liveatt-content"></div></div>';
+  renderLiveAttContent();
+}
+function setLiveAttMonth(m,btn){_liveAttMonth=m;document.querySelectorAll('#liveatt-month-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
+function setLiveAttPlan(p,btn){_liveAttPlan=p;document.querySelectorAll('#liveatt-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
+function setLiveAttRole(r,btn){_liveAttRole=r;document.querySelectorAll('#liveatt-role-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
+
+function renderLiveAttContent(){
+  var opps=window._liveAttRaw||_oppsData||[];
+  var allRows=_buildLiveAttMonthData(opps,_liveAttMonth);
+  var MGR_SET=(function(){var s={};EMPLOYEES.forEach(function(e){if(e.mgr)s[e.mgr]=true;});return s;})();
+  var filtered=allRows.filter(function(e){
+    if(_liveAttPlan!=='all'&&e.pl!==_liveAttPlan)return false;
+    if(_liveAttRole==='mgr')return !!MGR_SET[e.n];
+    if(_liveAttRole==='rep')return !MGR_SET[e.n];
+    return true;
+  });
+  var rated=filtered.filter(function(e){return e.att!==null;});
+  var naList=filtered.filter(function(e){return e.att===null;});
+  var total=rated.length;
+  var avg=total?(rated.reduce(function(s,e){return s+e.att;},0)/total).toFixed(1):'—';
+  var counts={sub40:0,mid:0,near:0,over:0};
+  rated.forEach(function(e){counts[attBucket(e.att)]++;});
+  var sorted=[].concat(rated).sort(function(a,b){return b.att-a.att;});
+  var q=(_liveAttSearch||'').toLowerCase();
+  var visible=sorted.filter(function(e){return !q||e.n.toLowerCase().indexOf(q)>=0;});
+
+  var detailRows='';
+  visible.forEach(function(e,i){
+    var bc=attColor(e.att),bk=attBucket(e.att);
+    detailRows+='<tr>'+
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td class="fw">'+e.n+'</td>'+
+      '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>'+
+      '<td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
+      '<td class="num">'+fm(e.actual)+'</td>'+
+      '<td class="num">'+fm(e.quota)+'</td>'+
+      '<td class="num fw" style="color:'+bc+'">'+e.att.toFixed(1)+'%'+
+        '<div style="height:6px;background:var(--grey-light);border-radius:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+Math.min(e.att,100).toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'+
+        '</div></td>'+
+      '<td class="num"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+bc+'22;color:'+bc+'">'+ATT_LABELS[bk]+'</span></td>'+
+    '</tr>';
+  });
+  if(naList.length&&!q)detailRows+='<tr><td colspan="8" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>No quota set ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
+
+  var liveBanner='<div style="display:flex;align-items:center;gap:10px;background:rgba(76,175,80,0.07);border-bottom:1px solid rgba(76,175,80,0.25);padding:9px 20px;font-size:12.5px;color:#2e7d32"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.3);border-radius:20px;padding:2px 9px"><span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span><span><strong>Computed live from the Opportunities sheet.</strong> Monthly attainment = monthly bookings ÷ (annual quota ÷ 12). Refreshes every 5 min.</span></div>';
+
+  document.getElementById('liveatt-content').innerHTML=liveBanner+
+    '<div class="kpi-grid">'+
+    '<div class="kpi gr"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+naList.length+' no quota</div></div>'+
+    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Below 40%</div><div class="kpi-val" style="color:#FF8161">'+counts.sub40+'</div><div class="kpi-sub">'+(total?(counts.sub40/total*100).toFixed(0):0)+'%</div></div>'+
+    '<div class="kpi" style="border-top:3px solid #FFB900"><div class="kpi-label">40–85%</div><div class="kpi-val" style="color:#b08400">'+counts.mid+'</div><div class="kpi-sub">'+(total?(counts.mid/total*100).toFixed(0):0)+'%</div></div>'+
+    '<div class="kpi" style="border-top:3px solid #669AD2"><div class="kpi-label">85–100%</div><div class="kpi-val" style="color:#185FA5">'+counts.near+'</div><div class="kpi-sub">'+(total?(counts.near/total*100).toFixed(0):0)+'%</div></div>'+
+    '<div class="kpi g"><div class="kpi-label">Above 100%</div><div class="kpi-val" style="color:#406EF1">'+counts.over+'</div><div class="kpi-sub">'+(total?(counts.over/total*100).toFixed(0):0)+'%</div></div>'+
+    '<div class="kpi b"><div class="kpi-label">Avg attainment</div><div class="kpi-val">'+avg+'%</div></div></div>'+
+    '<div class="card"><div class="card-header"><div class="card-title">Attainment by employee — '+_liveAttMonth+'</div></div>'+
+    '<div class="ch" style="height:'+Math.max(sorted.length*28+60,200)+'px"><canvas id="liveAttChart"></canvas></div></div>'+
+    '<div class="card"><div class="card-header" style="justify-content:space-between;align-items:center">'+
+      '<div class="card-title">Employee detail</div>'+
+      '<input type="text" placeholder="Filter employee…" value="'+(_liveAttSearch||'')+'" oninput="_liveAttSearch=this.value;renderLiveAttContent();" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;width:200px;background:var(--card);color:var(--text)">'+
+    '</div>'+
+    '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Actual</th><th class="num">Monthly Quota</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead>'+
+    '<tbody>'+detailRows+'</tbody></table></div>';
+
+  mkChart('liveAttChart',{type:'bar',data:{
+    labels:sorted.map(function(e){return e.n;}),
+    datasets:[
+      {label:'Monthly Quota',data:sorted.map(function(e){return e.quota;}),backgroundColor:'#E8EEF0',borderRadius:0},
+      {label:'Actual',data:sorted.map(function(e){return e.actual;}),backgroundColor:sorted.map(function(e){return attColor(e.att);}),borderRadius:4}
+    ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){return ctx.dataset.label+': '+fm(ctx.raw);}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+}
+// ── End Live Attainment ──────────────────────────────────────────────────────
+
 function renderAttainment(){
   _attMonth=ATTAINMENT_DATA['June 2026']?'June 2026':'May 2026';_attPlan='all';_attRole='all';
   _attEmpSearch='';_attWhatIfEmp=null;_attWhatIfAmt=0;
@@ -5681,7 +5797,7 @@ function renderGapContent() {
 var VIEW_MAP={
   overview:renderOverview,trend:renderTrend,bookings:renderBookings,
   csd:renderCSD,leaders:renderLeaders,managers:renderManagers,
-  attainment:renderAttainment,payrate:renderPayRate,spiff:renderSpiff,
+  attainment:renderAttainment,liveatt:renderLiveAtt,payrate:renderPayRate,spiff:renderSpiff,
   breakdown:renderBreakdown,opps:renderOpps,oppnet:renderOppNet,oppgap:renderOppGap
 };
 function nav(view,btn){
@@ -5811,7 +5927,7 @@ function syncFromWebApp(){
           id:r.id||r.oppId||r.sfId||'',
           plan:r.plan||'',emp:emp,mgr:empMgr[resolved]||'',
           opp:r.opp||'',type:r.type||'',book:r.book||'',
-          bk:r.bk||0,month:month.trim(),
+          bk:r.bk||0,month:month.trim(),quota:r.quota||0,
           closed:r.closed||'',start:r.start||'',split:r.split||100,
           acv:r.acv||0,comm:r.comm||0,oaBonus:r.oa||0,
           bbSpiff:r.bb||0,lpSpiff:r.lp||0,h1Spiff:r.h1||0,
@@ -5905,6 +6021,8 @@ function syncFromWebApp(){
       if(document.getElementById('opp-content'))renderOppContent();
       if(document.getElementById('att-content'))renderAttainment();
       if(document.getElementById('gap-content'))renderOppGap();
+      window._liveAttRaw=opps;
+      if(document.getElementById('liveatt-content'))renderLiveAttContent();
     })
     .catch(function(e){console.error('Opportunities fetch error:',e);});
 }
