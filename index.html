@@ -4738,7 +4738,7 @@ function renderLiveAttContent(){
     '<div class="card"><div class="card-header"><div class="card-title">Attainment by employee — '+_liveAttMonth+'</div></div>'+
     '<div class="ch" style="height:'+Math.max(sorted.length*28+60,200)+'px"><canvas id="liveAttChart"></canvas></div></div>'+
     '<div class="card"><div class="card-header" style="justify-content:space-between;align-items:center">'+
-      '<div class="card-title">Employee detail</div>'+
+      '<div><div class="card-title">Employee detail</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">💡 Click a name to see opportunity details</div></div>'+
       '<input type="text" placeholder="Filter employee…" value="'+(_liveAttSearch||'')+'" oninput="_liveAttSearch=this.value;renderLiveAttContent();" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;width:200px;background:var(--card);color:var(--text)">'+
     '</div>'+
     '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Actual</th><th class="num">Monthly Quota</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead>'+
