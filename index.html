@@ -4722,7 +4722,7 @@ function renderLiveAttContent(){
   });
   if(naList.length&&!q)detailRows+='<tr><td colspan="8" style="padding:12px 10px;font-size:11px;color:var(--muted);background:var(--grey-light)"><strong>No quota set ('+naList.length+'):</strong> '+naList.map(function(e){return e.n;}).join(', ')+'</td></tr>';
 
-  var liveBanner='<div style="display:flex;align-items:center;gap:10px;background:rgba(76,175,80,0.07);border-bottom:1px solid rgba(76,175,80,0.25);padding:9px 20px;font-size:12.5px;color:#2e7d32"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.3);border-radius:20px;padding:2px 9px"><span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span><span><strong>Computed live from the Opportunities sheet.</strong> Monthly attainment = monthly bookings ÷ (annual quota ÷ 12). Refreshes every 5 min.</span></div>';
+  var liveBanner='<div style="display:flex;align-items:center;gap:10px;background:rgba(76,175,80,0.07);border-bottom:1px solid rgba(76,175,80,0.25);padding:9px 20px;font-size:12.5px;color:#2e7d32"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.3);border-radius:20px;padding:2px 9px"><span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span><span><strong>Computed live from the Opportunities sheet.</strong> Attainment = cumulative YTD bookings (Jan – selected month) ÷ annual quota. Refreshes every 5 min.</span></div>';
 
   var h1Card=buildLiveH1Card(rated);
   var wiPanel=buildLiveWhatIfPanel(sorted);
@@ -4741,7 +4741,7 @@ function renderLiveAttContent(){
       '<div><div class="card-title">Employee detail</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">💡 Click a name to see opportunity details</div></div>'+
       '<input type="text" placeholder="Filter employee…" value="'+(_liveAttSearch||'')+'" oninput="_liveAttSearch=this.value;renderLiveAttContent();" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;width:200px;background:var(--card);color:var(--text)">'+
     '</div>'+
-    '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Actual</th><th class="num">Monthly Quota</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead>'+
+    '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Actual</th><th class="num">Annual Quota</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead>'+
     '<tbody>'+detailRows+'</tbody></table></div>';
 
   var _liveChartEmps=sorted.map(function(e){return e.n;});
@@ -4807,7 +4807,7 @@ function buildLiveWhatIfPanel(sorted){
       neededHtml;
   }
   var empInfo=emp?'<span style="font-size:11px;color:var(--muted2);margin-left:8px">'+emp.pl+(emp.mgr?' · '+emp.mgr:'')+'</span>':'';
-  return '<div class="card" style="border-top:3px solid #406EF1;margin-bottom:16px">'+
+  return '<div class="card" id="live-whatif-panel" style="border-top:3px solid #406EF1;margin-bottom:16px">'+
     '<div class="card-header" style="margin-bottom:8px">'+
       '<div class="card-title" style="display:flex;align-items:center;gap:8px">'+
         '<span>Attainment predictor</span>'+
@@ -4832,14 +4832,14 @@ function buildLiveWhatIfPanel(sorted){
 function liveAttSelectEmp(name){
   _liveWhatIfEmp=name||null;_liveWhatIfAmt=0;
   renderLiveAttContent();
-  setTimeout(function(){var el=document.querySelector('#liveatt-content .card');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
+  setTimeout(function(){var el=document.getElementById('live-whatif-panel');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
 }
 function liveAttSetWhatIfAmt(val){
   _liveWhatIfAmt=parseFloat(val)||0;
   var opps=window._liveAttRaw||_oppsData||[];
   var allRows=_buildLiveAttMonthData(opps,_liveAttMonth);
   var sorted=[].concat(allRows.filter(function(e){return e.att!==null;})).sort(function(a,b){return b.att-a.att;});
-  var panelEl=document.querySelector('#liveatt-content .card');
+  var panelEl=document.getElementById('live-whatif-panel');
   if(panelEl)panelEl.outerHTML=buildLiveWhatIfPanel(sorted);
 }
 
