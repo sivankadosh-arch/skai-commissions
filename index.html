@@ -4619,13 +4619,16 @@ var QUOTA_FALLBACK={
 };
 
 function _buildLiveAttMonthData(opps,month){
+  // Cumulative attainment: sum all bookings from Jan through `month` ÷ annual quota
+  var monthIdx=LIVE_ATT_MONTHS.indexOf(month);
+  var included=LIVE_ATT_MONTHS.slice(0,monthIdx+1);
   var quotaByEmp={},planByEmp={},mgrByEmp={},actualByEmp={};
   opps.forEach(function(o){
     var n=o.emp;if(!n)return;
     if(!planByEmp[n]){planByEmp[n]=o.plan||'';mgrByEmp[n]=o.mgr||'';}
     var q=o.quota||0;
     if(q>0&&(!(n in quotaByEmp)||q>quotaByEmp[n]))quotaByEmp[n]=q;
-    if(o.month===month)actualByEmp[n]=(actualByEmp[n]||0)+o.bk*(o.split/100);
+    if(included.indexOf(o.month)>=0)actualByEmp[n]=(actualByEmp[n]||0)+o.bk*(o.split/100);
   });
   var rows=[];
   Object.keys(planByEmp).forEach(function(n){
