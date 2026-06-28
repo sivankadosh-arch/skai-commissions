@@ -5856,12 +5856,14 @@ function syncFromWebApp(){
         var byOpp2={};
         var seenAcv={};
         opps.forEach(function(r){
-          var k=r.opp;
+          var k=(r.id&&r.id!=='')?r.id:r.opp.trim().toLowerCase();
           if(!byOpp2[k]) byOpp2[k]={opp:r.opp,type:r.type,book:r.book,closed:r.closed,month:r.month,
-            emps:[],comm:0,oa:0,bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0};
+            emps:[],comm:0,oa:0,bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0,fullBk:0};
           var g=byOpp2[k];
           if(r.emp&&g.emps.indexOf(r.emp)<0)g.emps.push(r.emp);
           if(!seenAcv[k])seenAcv[k]=r.acv; // ACV is opp-level, take first occurrence
+          var full=r.split>0?(r.bk*100/r.split):r.bk;
+          if(full>g.fullBk)g.fullBk=full;
           g.comm+=r.comm; g.oa+=r.oaBonus;
           g.bb+=r.bbSpiff; g.lp+=r.lpSpiff; g.h1+=r.h1Spiff;
           g.my+=r.mySpiff; g.ex+=r.exSpiff; g.pg+=r.pgSpiff;
@@ -5885,7 +5887,7 @@ function syncFromWebApp(){
           if(g.hc)spiffBreakdown.push({n:'HoCo Spiff',amt:Math.round(g.hc)});
           if(g.oa)spiffBreakdown.push({n:'OA Bonus',amt:Math.round(g.oa)});
           return{opp:g.opp,type:g.type,book:g.book,closed:g.closed,month:g.month,
-            acv:acv,bk:acv,emps:g.emps.join(', '),
+            acv:acv,bk:g.fullBk,emps:g.emps.join(', '),
             comm:Math.round(g.comm),spiffs:Math.round(totalSpiffs),
             payout:Math.round(payout),netAcv:Math.round(netAcv),netPct:netPct,
             spiffBreakdown:spiffBreakdown};
