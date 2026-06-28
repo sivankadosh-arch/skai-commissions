@@ -5510,7 +5510,7 @@ function renderNetContent() {
       '<td style="font-size:11px;color:var(--muted2)">'+o.month+'</td>' +
       '<td class="num">'+fm(o.acv)+'</td>' +
       '<td class="num" style="font-size:11px;color:var(--muted2)">'+(o.bk>0?fm(o.bk):'—')+'</td>' +
-      '<td class="num fw" style="color:#FF8161">'+fm(Math.round(o.payout))+payoutDetail+'</td>' +
+      '<td class="num fw" style="color:#C0392B">'+fm(Math.round(o.payout))+payoutDetail+'</td>' +
       '<td class="num fw">'+fm(o.netAcv)+'</td>' +
       '<td class="num fw" style="color:'+netColor(o.netPct)+'">'+o.netPct+'%</td>' +
       '<td style="font-size:10px;color:var(--muted2);max-width:160px">'+o.emps+'</td>' +
@@ -5523,7 +5523,7 @@ function renderNetContent() {
     '<div class="kpi b"><div class="kpi-label">Total Booking</div><div class="kpi-val">'+fm(totalBk)+'</div><div class="kpi-sub">commissionable bookings</div></div>' +
     '<div class="kpi gr"><div class="kpi-label">Net Revenue</div><div class="kpi-val">'+fm(totalNet)+'</div><div class="kpi-sub">after all payouts</div></div>' +
     '<div class="kpi b"><div class="kpi-label">Avg Net %</div><div class="kpi-val">'+avgNetPct+'%</div><div class="kpi-sub">weighted by ACV</div></div>' +
-    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
+    '<div class="kpi" style="border-top:3px solid #C0392B"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#C0392B">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
     '<div class="kpi" style="border-top:3px solid #b08400"><div class="kpi-label">Spiffs</div><div class="kpi-val" style="color:#b08400">'+fm(Math.round(totalSpiffs))+'</div><div class="kpi-sub"></div></div>' +
     '</div>' +
@@ -5533,7 +5533,7 @@ function renderNetContent() {
     '<div class="tbl-wrap"><table>' +
     '<thead><tr><th></th><th>Opportunity</th><th>Type</th><th>Price book</th><th>Month</th><th class="num">ACV</th><th class="num">Booking</th><th class="num">Total payout</th><th class="num">Net ACV</th><th class="num">Net %</th><th>Employees</th></tr></thead>' +
     '<tbody>'+rows+'</tbody>' +
-    '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num">'+fm(totalBk)+'</td><td class="num fw" style="color:#FF8161">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
+    '<tfoot><tr class="trow"><td colspan="5">Total</td><td class="num">'+fm(totalAcv)+'</td><td class="num">'+fm(totalBk)+'</td><td class="num fw" style="color:#C0392B">'+fm(Math.round(totalPayout))+'</td><td class="num fw">'+fm(totalNet)+'</td><td class="num fw">'+avgNetPct+'%</td><td></td></tr></tfoot>' +
     '</table></div></div>';
 
 }
