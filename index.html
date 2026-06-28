@@ -4659,7 +4659,7 @@ function _buildLiveAttMonthData(opps,month){
     var actual=actualByEmp[n]||0;
     var quota=quotaByEmp[n]||QUOTA_FALLBACK[n.toLowerCase()]||0;
     var att=quota>0?(actual/quota*100):null;
-    rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(quota),att:att!==null?Math.round(att*10)/10:null});
+    rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(quota),att:att!==null?Math.round(att*100)/100:null});
   });
   return rows;
 }
@@ -4701,7 +4701,7 @@ function renderLiveAttContent(){
   var naList=filtered.filter(function(e){return e.att===null;});
   var zeroList=rated.filter(function(e){return e.att===0;});
   var total=rated.length;
-  var avg=total?(rated.reduce(function(s,e){return s+e.att;},0)/total).toFixed(1):'—';
+  var avg=total?(rated.reduce(function(s,e){return s+e.att;},0)/total).toFixed(2):'—';
   var counts={sub40:0,mid:0,near:0,over:0};
   rated.forEach(function(e){counts[attBucket(e.att)]++;});
   var sorted=[].concat(rated).sort(function(a,b){return b.att-a.att;});
@@ -4718,9 +4718,9 @@ function renderLiveAttContent(){
       '<td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
       '<td class="num">'+fm(e.actual)+'</td>'+
       '<td class="num">'+fm(e.quota)+'</td>'+
-      '<td class="num fw" style="color:'+bc+'">'+e.att.toFixed(1)+'%'+
+      '<td class="num fw" style="color:'+bc+'">'+e.att.toFixed(2)+'%'+
         '<div style="height:6px;background:var(--grey-light);border-radius:3px;overflow:hidden">'+
-          '<div style="height:100%;width:'+Math.min(e.att,100).toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'+
+          '<div style="height:100%;width:'+Math.min(e.att,100).toFixed(2)+'%;background:'+bc+';border-radius:3px"></div>'+
         '</div></td>'+
       '<td class="num"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+bc+'22;color:'+bc+'">'+ATT_LABELS[bk]+'</span></td>'+
     '</tr>';
@@ -4763,7 +4763,7 @@ function buildLiveH1Card(rated){
   }).sort(function(a,b){return b.att-a.att;});
   var h1Names=h1List.map(function(e){
     var c=e.att>=100?'#406EF1':e.att>=85?'#185FA5':'#1e6b3e';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(1)+'%</span></span>';
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(2)+'%</span></span>';
   }).join('');
   var sellers=h1List.filter(function(e){return e.pl!=='Sales Leadership';});
   var mgrs=h1List.filter(function(e){return e.pl==='Sales Leadership';});
@@ -4794,7 +4794,7 @@ function buildLiveWhatIfPanel(sorted){
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px">'+
         '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
           '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Current attainment</div>'+
-          '<div style="font-size:28px;font-weight:700;color:'+curBc+'">'+curAtt.toFixed(1)+'%</div>'+
+          '<div style="font-size:28px;font-weight:700;color:'+curBc+'">'+curAtt.toFixed(2)+'%</div>'+
           '<div style="font-size:11px;color:var(--muted2);margin-top:4px">'+ATT_LABELS[attBucket(curAtt)]+'</div>'+
         '</div>'+
         '<div style="background:var(--grey-light);border-radius:8px;padding:12px 14px">'+
@@ -4804,8 +4804,8 @@ function buildLiveWhatIfPanel(sorted){
         '</div>'+
         '<div style="background:'+(delta>0?'rgba(64,110,241,0.07)':'var(--grey-light)')+';border:1.5px solid '+(delta>0?'#406EF1':'var(--border)')+';border-radius:8px;padding:12px 14px">'+
           '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Predicted attainment</div>'+
-          '<div style="font-size:28px;font-weight:700;color:'+predBc+'">'+predAtt.toFixed(1)+'%</div>'+
-          '<div style="font-size:11px;color:'+(delta>0?'#406EF1':'var(--muted2)')+';margin-top:4px;font-weight:600">'+(delta>0?'↑ +':delta<0?'↓ ':'')+delta.toFixed(1)+'% vs current</div>'+
+          '<div style="font-size:28px;font-weight:700;color:'+predBc+'">'+predAtt.toFixed(2)+'%</div>'+
+          '<div style="font-size:11px;color:'+(delta>0?'#406EF1':'var(--muted2)')+';margin-top:4px;font-weight:600">'+(delta>0?'↑ +':delta<0?'↓ ':'')+delta.toFixed(2)+'% vs current</div>'+
         '</div>'+
       '</div>'+
       (thresholds.length?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+thresholds.map(function(t){return '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+t.c+'22;color:'+t.c+'">✓ '+t.label+'</span>';}).join('')+'</div>':'')+
