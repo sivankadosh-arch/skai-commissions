@@ -4725,10 +4725,8 @@ function renderLiveAttContent(){
 
   mkChart('liveAttChart',{type:'bar',data:{
     labels:sorted.map(function(e){return e.n;}),
-    datasets:[
-      {label:'Monthly Quota',data:sorted.map(function(e){return e.quota;}),backgroundColor:'#E8EEF0',borderRadius:0},
-      {label:'Actual',data:sorted.map(function(e){return e.actual;}),backgroundColor:sorted.map(function(e){return attColor(e.att);}),borderRadius:4}
-    ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){return ctx.dataset.label+': '+fm(ctx.raw);}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return fm(v);}}},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+    datasets:[{data:sorted.map(function(e){return Math.round(e.att*10)/10;}),backgroundColor:sorted.map(function(e){return ATT_COLORS[attBucket(e.att)];}),borderRadius:2,label:'Attainment'}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
 }
 // ── End Live Attainment ──────────────────────────────────────────────────────
 
