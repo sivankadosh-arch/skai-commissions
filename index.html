@@ -5176,7 +5176,7 @@ function renderOppContent(){
   // Deduplicate by opp+month — count each unique deal once at its full value (bk*100/split)
   var _oppGroups={};
   opps.filter(function(o){return o.bk>0;}).forEach(function(o){
-    var key=o.opp.trim().toLowerCase()+'|'+o.month;
+    var key=(o.id&&o.id!==''?o.id:o.opp.trim().toLowerCase())+'|'+o.month;
     var full=o.split>0?Math.round(o.bk*100/o.split):o.bk;
     if(!_oppGroups[key]||full>_oppGroups[key].full)_oppGroups[key]={full:full,book:o.book,type:o.type};
   });
@@ -5203,7 +5203,7 @@ function renderOppContent(){
   var splitBk=opps.reduce(function(s,o){return s+o.bk;},0);
   var acvGroups={};
   opps.filter(function(o){return o.acv>0;}).forEach(function(o){
-    var key=o.opp.trim().toLowerCase()+'|'+o.month;
+    var key=(o.id&&o.id!==''?o.id:o.opp.trim().toLowerCase())+'|'+o.month;
     if(!acvGroups[key]||o.acv>acvGroups[key])acvGroups[key]=o.acv;
   });
   var totalAcv=Object.keys(acvGroups).reduce(function(s,k){return s+acvGroups[k];},0);
@@ -5734,6 +5734,7 @@ function syncFromWebApp(){
         var emp=r.emp||'',resolved=ALIASES[emp]||emp;
         var month=(r.month||'')+' '+(r.year||'');
         return{
+          id:r.id||r.oppId||r.sfId||'',
           plan:r.plan||'',emp:emp,mgr:empMgr[resolved]||'',
           opp:r.opp||'',type:r.type||'',book:r.book||'',
           bk:r.bk||0,month:month.trim(),
