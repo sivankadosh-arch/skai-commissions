@@ -5167,7 +5167,7 @@ function setOppMonth(m,btn){_oppMonth=m;document.querySelectorAll('#opp-month-ta
 function _filterSellerOpps(arr){
   var SELLER={'Net New':1,'Agency':1,'Growth':1,'HoCo':1};
   var hasSellerRow={};
-  arr.forEach(function(o){if(SELLER[o.plan])hasSellerRow[o.opp]=1;});
+  arr.forEach(function(o){if(SELLER[o.plan]&&o.bk>0)hasSellerRow[o.opp]=1;});
   return arr.filter(function(o){return SELLER[o.plan]||!hasSellerRow[o.opp];});
 }
 function renderOppContent(){
