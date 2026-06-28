@@ -4759,7 +4759,7 @@ function renderLiveAttContent(){
   mkChart('liveAttChart',{type:'bar',data:{
     labels:_liveChartEmps,
     datasets:[{data:sorted.map(function(e){return Math.round(e.att*10)/10;}),backgroundColor:sorted.map(function(e){return ATT_COLORS[attBucket(e.att)];}),borderRadius:2,label:'Attainment'}]
-  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:function(evt,els){var idx=els&&els[0]?els[0].index:-1;if(idx<0){var chart=this;var yScale=chart.scales.y;var canvasY=evt.offsetY;idx=Math.floor(canvasY/(chart.height/_liveChartEmps.length));} if(idx>=0&&_liveChartEmps[idx])openLiveDrawer(_liveChartEmps[idx]);},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:function(evt,els){var idx=els&&els[0]?els[0].index:-1;if(idx<0){var chart=this;var yScale=chart.scales.y;var canvasY=evt.offsetY;idx=Math.floor(canvasY/(chart.height/_liveChartEmps.length));} if(idx>=0&&_liveChartEmps[idx])openLiveDrawer(_liveChartEmps[idx]);},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%'+(DEPARTED[_liveChartEmps[ctx.dataIndex]]?' (left)':'');}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:function(ctx){return DEPARTED[_liveChartEmps[ctx.index]]?'#FF8161':'#5a6a72';},font:{size:11}}}}}}  );
 }
 function buildLiveH1Card(rated){
   var h1List=rated.filter(function(e){
@@ -4769,7 +4769,8 @@ function buildLiveH1Card(rated){
   }).sort(function(a,b){return b.att-a.att;});
   var h1Names=h1List.map(function(e){
     var c=e.att>=100?'#406EF1':e.att>=85?'#185FA5':'#1e6b3e';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--night)">'+e.n+'<span style="color:'+c+';font-weight:700">'+e.att.toFixed(2)+'%</span></span>';
+    var left=!!DEPARTED[e.n];
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--grey-light);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:'+(left?'#FF8161':'var(--night)')+';text-decoration:'+(left?'line-through':'none')+';opacity:'+(left?'0.7':'1')+'"'+(left?' title="Left Skai"':'')+'>'+e.n+'<span style="color:'+(left?'#FF8161':c)+';font-weight:700">'+e.att.toFixed(2)+'%</span></span>';
   }).join('');
   var sellers=h1List.filter(function(e){return e.pl!=='Sales Leadership';});
   var mgrs=h1List.filter(function(e){return e.pl==='Sales Leadership';});
@@ -4778,7 +4779,7 @@ function buildLiveH1Card(rated){
 
 function buildLiveWhatIfPanel(sorted){
   var emp=_liveWhatIfEmp?sorted.find(function(e){return e.n===_liveWhatIfEmp;}):null;
-  var ddOpts=sorted.map(function(e){return '<option value="'+e.n+'"'+(e.n===_liveWhatIfEmp?' selected':'')+'>'+e.n+'</option>';}).join('');
+  var ddOpts=sorted.map(function(e){return '<option value="'+e.n+'"'+(e.n===_liveWhatIfEmp?' selected':'')+'>'+e.n+(DEPARTED[e.n]?' (left)':'')+'</option>';}).join('');
   var predHtml='';
   if(emp){
     var amt=_liveWhatIfAmt||0;
