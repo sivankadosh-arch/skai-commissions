@@ -4596,12 +4596,35 @@ var _attEmpSearch='',_attWhatIfEmp=null,_attWhatIfAmt=0;
 var _liveAttMonth='May 2026',_liveAttPlan='all',_liveAttRole='all',_liveAttSearch='';
 var LIVE_ATT_MONTHS=['January 2026','February 2026','March 2026','April 2026','May 2026','June 2026'];
 
+// Annual quota fallback — sourced from Monthly & YTD Bookings sheet (col K).
+// Used until Apps Script is redeployed with the quota field.
+var QUOTA_FALLBACK={
+  'david sequeira':3000000,'connor hank':1350000,'matthew vignieri':3000000,
+  'larissa moreira':1012500,'michael keaveny':1833333,'david henson bowen':666301,
+  'jon silverman':2000000,'alexandra kendall':2000000,'thomas harlukowicz':1250000,
+  'claudia virgilio':2000000,'shana martin':1350000,'scott merrill':2000000,
+  'patricia soete':1350000,'maxime accadebled':2000000,'simon piper':3000000,
+  'ashley jenkins':17000000,'daniel moore':950000,'michael heredia':950000,
+  'bryan edgecomb':5552250,'taher noor':1350000,'jeff valente':8000000,
+  'richard sireno':2000000,'julie olamit':950000,'steve williams':2000000,
+  'brandon vencott':5046667,'daniel madden':8149500,'james wasenius':9000000,
+  'shea stine':1350000,'yusuf khan':4074750,'celine nicole levy':11104500,
+  'kevin weiss':15140000,'pedro diogo':8149500,'matthew turner':1350000,
+  'samuel dhuey':5046667,'lindsay omaits':5552250,'paul wainwright':6000000,
+  'samuel benkel':1250000,'chris casciola':904110,'xavier latty':4074750,
+  'allen hammock':8821000,'michael messerle':2000000,'alex fish':5046667,
+  'olga puzhko':1350000,'tania zelinski':610274,'ben kingshott':662055,
+  'nicole beloyianis':1350000,'nicholas zurek':1350000,'sara sigman':1350000,
+  'rich sireno':2000000
+};
+
 function _buildLiveAttMonthData(opps,month){
   var quotaByEmp={},planByEmp={},mgrByEmp={},actualByEmp={};
   opps.forEach(function(o){
     var n=o.emp;if(!n)return;
     if(!planByEmp[n]){planByEmp[n]=o.plan||'';mgrByEmp[n]=o.mgr||'';}
-    if(o.quota>0&&(!(n in quotaByEmp)||o.quota>quotaByEmp[n]))quotaByEmp[n]=o.quota;
+    var q=o.quota||0;
+    if(q>0&&(!(n in quotaByEmp)||q>quotaByEmp[n]))quotaByEmp[n]=q;
     if(o.month===month)actualByEmp[n]=(actualByEmp[n]||0)+o.bk*(o.split/100);
   });
   var rows=[];
@@ -4609,7 +4632,7 @@ function _buildLiveAttMonthData(opps,month){
     var pl=planByEmp[n];
     if(pl==='CSD'||pl==='CSD LEAD')return;
     var actual=actualByEmp[n]||0;
-    var annualQ=quotaByEmp[n]||0;
+    var annualQ=quotaByEmp[n]||QUOTA_FALLBACK[n.toLowerCase()]||0;
     var monthlyQ=annualQ>0?annualQ/12:0;
     var att=monthlyQ>0?(actual/monthlyQ*100):null;
     rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(monthlyQ),att:att!==null?Math.round(att*10)/10:null});
