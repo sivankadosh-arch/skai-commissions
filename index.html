@@ -4741,10 +4741,11 @@ function renderLiveAttContent(){
     '<table><thead><tr><th></th><th>Employee</th><th>Plan</th><th>Manager</th><th class="num">Actual</th><th class="num">Monthly Quota</th><th class="num">Attainment</th><th class="num">Band</th></tr></thead>'+
     '<tbody>'+detailRows+'</tbody></table></div>';
 
+  var _liveChartEmps=sorted.map(function(e){return e.n;});
   mkChart('liveAttChart',{type:'bar',data:{
-    labels:sorted.map(function(e){return e.n;}),
+    labels:_liveChartEmps,
     datasets:[{data:sorted.map(function(e){return Math.round(e.att*10)/10;}),backgroundColor:sorted.map(function(e){return ATT_COLORS[attBucket(e.att)];}),borderRadius:2,label:'Attainment'}]
-  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11}}}}}});
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:function(evt,els){var idx=els&&els[0]?els[0].index:-1;if(idx<0){var chart=this;var yScale=chart.scales.y;var canvasY=evt.offsetY;idx=Math.floor(canvasY/(chart.height/_liveChartEmps.length));} if(idx>=0&&_liveChartEmps[idx])openLiveDrawer(_liveChartEmps[idx]);},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,callback:function(v){return v+'%';}},max:Math.max(100,sorted[0]?sorted[0].att+20:100)},y:{grid:{display:false},ticks:{color:'#5a6a72',font:{size:11,cursor:'pointer'}}}}}}});
 }
 function openLiveDrawer(empName){
   var TC={'Net-New':'#406EF1','Renewal':'#669AD2','Pilot Conversion':'#FFB900','Upsale':'#FF8161','Other':'#878F91','Transfer':'#878F91'};
