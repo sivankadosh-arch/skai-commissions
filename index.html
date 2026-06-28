@@ -4632,10 +4632,9 @@ function _buildLiveAttMonthData(opps,month){
     var pl=planByEmp[n];
     if(pl==='CSD'||pl==='CSD LEAD')return;
     var actual=actualByEmp[n]||0;
-    var annualQ=quotaByEmp[n]||QUOTA_FALLBACK[n.toLowerCase()]||0;
-    var monthlyQ=annualQ>0?annualQ/12:0;
-    var att=monthlyQ>0?(actual/monthlyQ*100):null;
-    rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(monthlyQ),att:att!==null?Math.round(att*10)/10:null});
+    var quota=quotaByEmp[n]||QUOTA_FALLBACK[n.toLowerCase()]||0;
+    var att=quota>0?(actual/quota*100):null;
+    rows.push({n:n,pl:pl,mgr:mgrByEmp[n]||'',actual:Math.round(actual),quota:Math.round(quota),att:att!==null?Math.round(att*10)/10:null});
   });
   return rows;
 }
