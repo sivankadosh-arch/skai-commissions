@@ -6006,7 +6006,9 @@ function nav(view,btn){
   VIEW_MAP[view]();
   updateLastUpdatedBar(view);
   var banner=document.getElementById('draft-banner');
+  var lubar=document.getElementById('last-updated-bar');
   if(banner)banner.style.display=view==='liveatt'?'none':'flex';
+  if(lubar)lubar.style.top=view==='liveatt'?'0':'38px';
 }
 renderOverview();
 
