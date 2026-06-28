@@ -4612,6 +4612,7 @@ var _attMonth='June 2026',_attPlan='all',_attRole='all';
 var _attEmpSearch='',_attWhatIfEmp=null,_attWhatIfAmt=0;
 // ── Live Attainment view ──────────────────────────────────────────────────────
 var _liveAttMonth='May 2026',_liveAttPlan='all',_liveAttRole='all',_liveAttSearch='',_liveWhatIfEmp=null,_liveWhatIfAmt=0,_liveAttBucket=null;
+var DEPARTED={'Steve Williams':1,'Eric Vignieri':1,'Max Erraouhi':1,'Evandro Carvalho de Sousa':1,'Michael DeFazio':1,'Yvonne Morel':1};
 var LIVE_ATT_MONTHS=['January 2026','February 2026','March 2026','April 2026','May 2026','June 2026'];
 
 // Annual quota fallback — sourced from Monthly & YTD Bookings sheet (col K).
@@ -4715,9 +4716,10 @@ function renderLiveAttContent(){
   var detailRows='';
   visible.forEach(function(e,i){
     var bc=attColor(e.att),bk=attBucket(e.att);
-    detailRows+='<tr onclick="openLiveDrawer(\''+e.n.replace(/'/g,"\\'")+'\');" style="cursor:pointer">'+
+    var left=!!DEPARTED[e.n];
+    detailRows+='<tr onclick="openLiveDrawer(\''+e.n.replace(/'/g,"\\'")+'\');" style="cursor:pointer'+(left?';opacity:0.75':'')+'">'+
       '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
-      '<td class="fw" style="color:#406EF1">'+e.n+'</td>'+
+      '<td class="fw" style="color:'+(left?'#FF8161':'#406EF1')+';text-decoration:'+(left?'line-through':'none')+'">'+(left?'<span title="Left Skai">'+e.n+'</span>':e.n)+'</td>'+
       '<td style="font-size:11px;color:var(--muted2)">'+e.pl+'</td>'+
       '<td style="font-size:11px;color:var(--muted2)">'+e.mgr+'</td>'+
       '<td class="num">'+fm(e.actual)+'</td>'+
