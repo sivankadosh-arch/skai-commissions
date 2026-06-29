@@ -4372,7 +4372,7 @@ function renderNetContent() {
 
     // Commission + spiff breakdown lines
     var payoutLines = [];
-    if(hasComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:var(--muted2)">Commission</span><span style="font-weight:600">'+fm(Math.round(o.comm))+'</span></div>');
+    if(hasComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:var(--muted2)">Committed Upfront Commission</span><span style="font-weight:600">'+fm(Math.round(o.comm))+'</span></div>');
     if(o.revComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#669AD2">Revenue Commission</span><span style="font-weight:600;color:#669AD2">'+fm(o.revComm)+'</span></div>');
     if(o.baseComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#406EF1">Baseline Rev Commission</span><span style="font-weight:600;color:#406EF1">'+fm(o.baseComm)+'</span></div>');
     if(o.spiffBreakdown && o.spiffBreakdown.length){
@@ -4410,7 +4410,7 @@ function renderNetContent() {
     '<div class="kpi gr"><div class="kpi-label">Net Revenue</div><div class="kpi-val">'+fm(totalNet)+'</div><div class="kpi-sub">after all payouts</div></div>' +
     '<div class="kpi b"><div class="kpi-label">Avg Net %</div><div class="kpi-val">'+avgNetPct+'%</div><div class="kpi-sub">weighted by ACV</div></div>' +
     '<div class="kpi" style="border-top:3px solid #C0392B"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#C0392B">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
-    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
+    '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Committed Upfront Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
     '<div class="kpi" style="border-top:3px solid #b08400"><div class="kpi-label">Spiffs</div><div class="kpi-val" style="color:#b08400">'+fm(Math.round(totalSpiffs))+'</div><div class="kpi-sub" style="color:#b08400;font-size:10px">Not included in actual revenue payout</div></div>' +
     '<div class="kpi" style="border-top:3px solid #669AD2"><div class="kpi-label">Revenue Commission</div><div class="kpi-val" style="color:#669AD2">'+fm(Math.round(totalRevComm))+'</div><div class="kpi-sub">col AM</div></div>' +
     '<div class="kpi" style="border-top:3px solid #406EF1"><div class="kpi-label">Baseline Rev Commission</div><div class="kpi-val" style="color:#406EF1">'+fm(Math.round(totalBaseComm))+'</div><div class="kpi-sub">col AN</div></div>' +
