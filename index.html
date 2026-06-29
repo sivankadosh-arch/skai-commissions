@@ -4766,7 +4766,7 @@ function syncFromWebApp(){
           var g=byOpp2[k];
           var acv=seenAcv[k]||0;
           var totalSpiffs=g.bb+g.lp+g.h1+g.my+g.ex+g.pg+g.na+g.hc+g.oa;
-          var payout=g.comm+totalSpiffs;
+          var payout=g.comm+totalSpiffs+g.rvc+g.bsc;
           var netAcv=acv-payout;
           var netPct=acv>0?Math.round((netAcv/acv)*1000)/10:0;
           var spiffBreakdown=[];
