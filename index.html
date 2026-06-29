@@ -4372,7 +4372,7 @@ function renderNetContent() {
 
     // Commission + spiff breakdown lines
     var payoutLines = [];
-    if(hasComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:var(--muted2)">Committed Upfront Commission</span><span style="font-weight:600">'+fm(Math.round(o.comm))+'</span></div>');
+    if(hasComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#FF8161">Committed Upfront Commission</span><span style="font-weight:600;color:#FF8161">'+fm(Math.round(o.comm))+'</span></div>');
     if(o.revComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#669AD2">Revenue Commission</span><span style="font-weight:600;color:#669AD2">'+fm(o.revComm)+'</span></div>');
     if(o.baseComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#406EF1">Baseline Rev Commission</span><span style="font-weight:600;color:#406EF1">'+fm(o.baseComm)+'</span></div>');
     if(o.spiffBreakdown && o.spiffBreakdown.length){
