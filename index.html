@@ -4708,7 +4708,8 @@ function syncFromWebApp(){
           acv:r.acv||0,comm:r.comm||0,oaBonus:r.oa||0,
           bbSpiff:r.bb||0,lpSpiff:r.lp||0,h1Spiff:r.h1||0,
           mySpiff:r.my||0,exSpiff:r.ex||0,pgSpiff:r.pg||0,
-          naSpiff:r.na||0,hcSpiff:r.hc||0
+          naSpiff:r.na||0,hcSpiff:r.hc||0,
+          revComm:r.revComm||0,baseComm:r.baseComm||0
         };
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
