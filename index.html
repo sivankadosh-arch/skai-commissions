@@ -4323,8 +4323,10 @@ function renderNetContent() {
   var totalAcv    = uniqueOpps.reduce(function(s,o){return s+o.acv;},0);
   var totalBk     = uniqueOpps.reduce(function(s,o){return s+(o.bk||0);},0);
   var totalPayout = uniqueOpps.reduce(function(s,o){return s+o.payout;},0);
-  var totalComm   = uniqueOpps.reduce(function(s,o){return s+(o.comm||0);},0);
-  var totalSpiffs = uniqueOpps.reduce(function(s,o){return s+(o.spiffs||0);},0);
+  var totalComm     = uniqueOpps.reduce(function(s,o){return s+(o.comm||0);},0);
+  var totalSpiffs   = uniqueOpps.reduce(function(s,o){return s+(o.spiffs||0);},0);
+  var totalRevComm  = uniqueOpps.reduce(function(s,o){return s+(o.revComm||0);},0);
+  var totalBaseComm = uniqueOpps.reduce(function(s,o){return s+(o.baseComm||0);},0);
   var totalNet    = totalAcv - totalPayout;
   var avgNetPct   = totalAcv>0?(totalNet/totalAcv*100).toFixed(1):0;
 
@@ -4371,6 +4373,8 @@ function renderNetContent() {
     // Commission + spiff breakdown lines
     var payoutLines = [];
     if(hasComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:var(--muted2)">Commission</span><span style="font-weight:600">'+fm(Math.round(o.comm))+'</span></div>');
+    if(o.revComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#669AD2">Revenue Commission</span><span style="font-weight:600;color:#669AD2">'+fm(o.revComm)+'</span></div>');
+    if(o.baseComm) payoutLines.push('<div style="display:flex;justify-content:space-between;gap:12px;padding:1px 0"><span style="color:#406EF1">Baseline Rev Commission</span><span style="font-weight:600;color:#406EF1">'+fm(o.baseComm)+'</span></div>');
     if(o.spiffBreakdown && o.spiffBreakdown.length){
       o.spiffBreakdown.forEach(function(s){
         if(s.amt){
@@ -4408,6 +4412,8 @@ function renderNetContent() {
     '<div class="kpi" style="border-top:3px solid #C0392B"><div class="kpi-label">Total Payout</div><div class="kpi-val" style="color:#C0392B">'+fm(Math.round(totalPayout))+'</div><div class="kpi-sub">commission + spiffs</div></div>' +
     '<div class="kpi" style="border-top:3px solid #FF8161"><div class="kpi-label">Commission</div><div class="kpi-val" style="color:#FF8161">'+fm(Math.round(totalComm))+'</div><div class="kpi-sub"></div></div>' +
     '<div class="kpi" style="border-top:3px solid #b08400"><div class="kpi-label">Spiffs</div><div class="kpi-val" style="color:#b08400">'+fm(Math.round(totalSpiffs))+'</div><div class="kpi-sub" style="color:#b08400;font-size:10px">Not included in actual revenue payout</div></div>' +
+    '<div class="kpi" style="border-top:3px solid #669AD2"><div class="kpi-label">Revenue Commission</div><div class="kpi-val" style="color:#669AD2">'+fm(Math.round(totalRevComm))+'</div><div class="kpi-sub">col AM</div></div>' +
+    '<div class="kpi" style="border-top:3px solid #406EF1"><div class="kpi-label">Baseline Rev Commission</div><div class="kpi-val" style="color:#406EF1">'+fm(Math.round(totalBaseComm))+'</div><div class="kpi-sub">col AN</div></div>' +
     '</div>' +
     '<div class="card" style="margin-bottom:14px"><div class="card-header"><div class="card-title">Net % distribution</div></div>' +
     '<div style="padding:8px 0">'+distBars+'</div></div>' +
@@ -4743,13 +4749,14 @@ function syncFromWebApp(){
         opps.forEach(function(r){
           var k=(r.id&&r.id!=='')?r.id:r.opp.trim().toLowerCase();
           if(!byOpp2[k]) byOpp2[k]={opp:r.opp,type:r.type,book:r.book,closed:r.closed,month:r.month,
-            emps:[],comm:0,oa:0,bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0,fullBk:0};
+            emps:[],comm:0,oa:0,bb:0,lp:0,h1:0,my:0,ex:0,pg:0,na:0,hc:0,fullBk:0,rvc:0,bsc:0};
           var g=byOpp2[k];
           if(r.emp&&g.emps.indexOf(r.emp)<0)g.emps.push(r.emp);
           if(!seenAcv[k])seenAcv[k]=r.acv; // ACV is opp-level, take first occurrence
           var full=r.split>0?(r.bk*100/r.split):r.bk;
           if(full>g.fullBk)g.fullBk=full;
           g.comm+=r.comm; g.oa+=r.oaBonus;
+          g.rvc+=(r.revComm||0); g.bsc+=(r.baseComm||0);
           g.bb+=r.bbSpiff; g.lp+=r.lpSpiff; g.h1+=r.h1Spiff;
           g.my+=r.mySpiff; g.ex+=r.exSpiff; g.pg+=r.pgSpiff;
           g.na+=r.naSpiff; g.hc+=r.hcSpiff;
@@ -4775,7 +4782,8 @@ function syncFromWebApp(){
             acv:acv,bk:g.fullBk,emps:g.emps.join(', '),
             comm:Math.round(g.comm),spiffs:Math.round(totalSpiffs),
             payout:Math.round(payout),netAcv:Math.round(netAcv),netPct:netPct,
-            spiffBreakdown:spiffBreakdown};
+            spiffBreakdown:spiffBreakdown,
+            revComm:Math.round(g.rvc),baseComm:Math.round(g.bsc)};
         }).filter(function(o){return o.acv>0||o.comm>0;})
           .sort(function(a,b){return a.closed>b.closed?1:a.closed<b.closed?-1:0;});
         console.log('Net Opp built:',liveNetOpp.length,'opps. Mars Wrigley:',liveNetOpp.find(function(o){return o.opp.indexOf('Mars')>=0;}));
