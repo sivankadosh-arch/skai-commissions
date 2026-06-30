@@ -3467,6 +3467,48 @@ function setLiveAttMonth(m,btn){_liveAttMonth=m;_liveAttBucket=null;document.que
 function setLiveAttPlan(p,btn){_liveAttPlan=p;_liveAttBucket=null;document.querySelectorAll('#liveatt-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
 function setLiveAttRole(r,btn){_liveAttRole=r;_liveAttBucket=null;document.querySelectorAll('#liveatt-role-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
 function setLiveAttBucketFilter(b){_liveAttBucket=(_liveAttBucket===b)?null:b;renderLiveAttContent();}
+function buildNonSignedCard(opps,month){
+  var monthIdx=LIVE_ATT_MONTHS.indexOf(month);
+  var included=LIVE_ATT_MONTHS.slice(0,monthIdx+1);
+  var items=opps.filter(function(o){return o.contractStatus==='Non-Signed Contract'&&included.indexOf(o.month)>=0;});
+  if(!items.length)return '';
+  items.sort(function(a,b){return b.bk-a.bk;});
+  var total=items.reduce(function(s,o){return s+o.bk;},0);
+  var rows=items.map(function(o){
+    return '<tr>'+
+      '<td style="font-size:12px;color:var(--text);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+o.opp+'">'+o.opp+'</td>'+
+      '<td style="font-size:12px;color:#406EF1;font-weight:600;white-space:nowrap">'+o.emp+'</td>'+
+      '<td style="font-size:11px;color:var(--muted2);white-space:nowrap">'+o.month+'</td>'+
+      '<td class="num" style="font-size:12px;color:var(--text);white-space:nowrap">'+fm(o.bk)+'</td>'+
+    '</tr>';
+  }).join('');
+  var filterLabel=_liveExcludeNonSigned
+    ?'<span style="font-size:10px;font-weight:700;background:#1F4E7922;color:#1F4E79;border-radius:20px;padding:2px 9px;margin-left:8px">Excluded from attainment</span>'
+    :'<span style="font-size:10px;font-weight:700;background:#ffa50022;color:#b07000;border-radius:20px;padding:2px 9px;margin-left:8px">Included in attainment</span>';
+  return '<div class="card" style="border-left:4px solid #1F4E79;margin-bottom:0">'+
+    '<div class="card-header" style="padding-bottom:6px">'+
+      '<div>'+
+        '<div class="card-title" style="color:#1F4E79">Non-Signed Contracts'+filterLabel+'</div>'+
+        '<div style="font-size:11px;color:var(--muted2);margin-top:2px">'+items.length+' opp'+(items.length!==1?'s':'')+' · YTD through '+month+'</div>'+
+      '</div>'+
+      '<div style="text-align:right"><div style="font-size:11px;color:var(--muted2)">Total excluded</div><div style="font-size:18px;font-weight:700;color:#1F4E79">'+fm(total)+'</div></div>'+
+    '</div>'+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="border-bottom:1px solid var(--border)">'+
+        '<th style="text-align:left;font-size:10px;font-weight:600;color:var(--muted2);padding:4px 8px 6px 0;text-transform:uppercase;letter-spacing:.5px">Opportunity</th>'+
+        '<th style="text-align:left;font-size:10px;font-weight:600;color:var(--muted2);padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.5px">Owner</th>'+
+        '<th style="text-align:left;font-size:10px;font-weight:600;color:var(--muted2);padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.5px">Month</th>'+
+        '<th style="text-align:right;font-size:10px;font-weight:600;color:var(--muted2);padding:4px 0 6px 8px;text-transform:uppercase;letter-spacing:.5px">Bookings</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+
+        '<tr style="border-top:2px solid var(--border)">'+
+          '<td colspan="3" style="font-size:12px;font-weight:700;color:#1F4E79;padding:6px 8px 4px 0">Total</td>'+
+          '<td class="num" style="font-size:12px;font-weight:700;color:#1F4E79;padding:6px 0 4px 8px">'+fm(total)+'</td>'+
+        '</tr>'+
+      '</tbody>'+
+    '</table></div>'+
+  '</div>';
+}
 function toggleLiveExcludeNonSigned(){_liveExcludeNonSigned=!_liveExcludeNonSigned;var btn=document.getElementById('liveatt-nonsigned-btn');if(btn)btn.classList.toggle('active',_liveExcludeNonSigned);renderLiveAttContent();}
 
 function renderLiveAttContent(){
@@ -3517,7 +3559,9 @@ function renderLiveAttContent(){
 
   var h1Card=buildLiveH1Card(rated);
   var wiPanel=buildLiveWhatIfPanel(sorted);
+  var nonSignedCard=buildNonSignedCard(opps,_liveAttMonth);
   document.getElementById('liveatt-content').innerHTML=liveBanner+
+    nonSignedCard+
     '<div class="kpi-grid">'+
     '<div class="kpi gr'+((!_liveAttBucket)?' ':'')+'"><div class="kpi-label">Rated employees</div><div class="kpi-val">'+total+'</div><div class="kpi-sub">'+(zeroList.length?'0% YTD: '+zeroList.map(function(e){return e.n;}).join(', '):'All have bookings')+'</div></div>'+
     '<div class="kpi" onclick="setLiveAttBucketFilter(\'sub40\')" style="border-top:3px solid #FF8161;cursor:pointer'+((_liveAttBucket==='sub40')?';box-shadow:0 0 0 2px #FF8161;':'')+'" title="Click to filter"><div class="kpi-label">Below 40%</div><div class="kpi-val" style="color:#FF8161">'+counts.sub40+'</div><div class="kpi-sub">'+(total?(counts.sub40/total*100).toFixed(0):0)+'%'+((_liveAttBucket==='sub40')?' · <strong>filtered</strong>':'')+'</div></div>'+
