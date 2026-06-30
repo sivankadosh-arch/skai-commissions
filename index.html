@@ -3470,6 +3470,7 @@ function setLiveAttBucketFilter(b){_liveAttBucket=(_liveAttBucket===b)?null:b;re
 function buildNonSignedCard(opps,month){
   var monthIdx=LIVE_ATT_MONTHS.indexOf(month);
   var included=LIVE_ATT_MONTHS.slice(0,monthIdx+1);
+  if(!_liveExcludeNonSigned)return '';
   var items=opps.filter(function(o){return o.contractStatus==='Non-Signed Contract'&&included.indexOf(o.month)>=0;});
   if(!items.length)return '';
   var grouped={},order=[];
