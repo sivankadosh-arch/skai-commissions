@@ -3472,22 +3472,28 @@ function buildNonSignedCard(opps,month){
   var included=LIVE_ATT_MONTHS.slice(0,monthIdx+1);
   var items=opps.filter(function(o){return o.contractStatus==='Non-Signed Contract'&&included.indexOf(o.month)>=0;});
   if(!items.length)return '';
-  var rows=items.map(function(o){
+  var grouped={},order=[];
+  items.forEach(function(o){
+    var key=o.id||o.opp;
+    if(!grouped[key]){grouped[key]={opp:o.opp,acv:o.acv||0,emps:[]};order.push(key);}
+    if(grouped[key].emps.indexOf(o.emp)<0)grouped[key].emps.push(o.emp);
+  });
+  var rows=order.map(function(k){
+    var g=grouped[k];
+    var empList=g.emps.map(function(e){return '<span style="color:#406EF1;font-weight:600">'+e+'</span>';}).join(', ');
     return '<tr style="border-bottom:1px solid var(--border)">'+
-      '<td style="font-size:12px;color:var(--text);padding:6px 12px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="'+o.opp+'">'+o.opp+'</td>'+
-      '<td style="font-size:12px;color:#406EF1;font-weight:600;padding:6px 12px;white-space:nowrap">'+o.emp+'</td>'+
-      '<td class="num" style="font-size:12px;color:var(--muted2);padding:6px 12px;white-space:nowrap">'+fm(o.acv||0)+'</td>'+
-      '<td class="num" style="font-size:12px;color:var(--text);font-weight:600;padding:6px 0 6px 12px;white-space:nowrap">'+fm(o.bk)+'</td>'+
+      '<td style="font-size:12px;color:var(--text);padding:6px 12px 6px 0;overflow:hidden;text-overflow:ellipsis;max-width:280px" title="'+g.opp+'">'+g.opp+'</td>'+
+      '<td style="font-size:12px;padding:6px 12px">'+empList+'</td>'+
+      '<td class="num" style="font-size:12px;color:var(--muted2);padding:6px 0 6px 12px;white-space:nowrap">'+fm(g.acv)+'</td>'+
     '</tr>';
   }).join('');
   return '<div class="card" style="border-left:4px solid #1F4E79">'+
-    '<div style="font-size:13px;font-weight:700;color:#1F4E79;margin-bottom:8px">Non-Signed Contracts <span style="font-size:11px;font-weight:400;color:var(--muted2)">'+items.length+' opp'+(items.length!==1?'s':'')+' · YTD through '+month+'</span></div>'+
+    '<div style="font-size:13px;font-weight:700;color:#1F4E79;margin-bottom:8px">Non-Signed Contracts <span style="font-size:11px;font-weight:400;color:var(--muted2)">'+order.length+' opp'+(order.length!==1?'s':'')+' · YTD through '+month+'</span></div>'+
     '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'+
       '<thead><tr style="border-bottom:2px solid var(--border)">'+
         '<th style="text-align:left;font-size:10px;font-weight:600;color:var(--muted2);padding:0 12px 5px 0;text-transform:uppercase;letter-spacing:.5px">Opportunity</th>'+
         '<th style="text-align:left;font-size:10px;font-weight:600;color:var(--muted2);padding:0 12px 5px;text-transform:uppercase;letter-spacing:.5px">Owner</th>'+
-        '<th style="text-align:right;font-size:10px;font-weight:600;color:var(--muted2);padding:0 12px 5px;text-transform:uppercase;letter-spacing:.5px">ACV</th>'+
-        '<th style="text-align:right;font-size:10px;font-weight:600;color:var(--muted2);padding:0 0 5px 12px;text-transform:uppercase;letter-spacing:.5px">Incremental</th>'+
+        '<th style="text-align:right;font-size:10px;font-weight:600;color:var(--muted2);padding:0 0 5px 12px;text-transform:uppercase;letter-spacing:.5px">ACV</th>'+
       '</tr></thead>'+
       '<tbody>'+rows+'</tbody>'+
     '</table></div>'+
