@@ -3389,7 +3389,7 @@ function selectMgr(name) {
 
 /* ── ATTAINMENT ─────────────────────────────────────────────────── */
 // ── Live Attainment view ──────────────────────────────────────────────────────
-var _liveAttMonth='May 2026',_liveAttPlan='all',_liveAttRole='all',_liveAttSearch='',_liveWhatIfEmp=null,_liveWhatIfAmt=0,_liveAttBucket=null;
+var _liveAttMonth='May 2026',_liveAttPlan='all',_liveAttRole='all',_liveAttSearch='',_liveWhatIfEmp=null,_liveWhatIfAmt=0,_liveAttBucket=null,_liveExcludeNonSigned=true;
 var DEPARTED={'Steve Williams':1,'Eric Vignieri':1,'Max Erraouhi':1,'Evandro Carvalho de Sousa':1,'Michael DeFazio':1,'Yvonne Morel':1};
 var LIVE_ATT_MONTHS=['January 2026','February 2026','March 2026','April 2026','May 2026','June 2026'];
 
@@ -3429,7 +3429,7 @@ function _buildLiveAttMonthData(opps,month){
     if(included.indexOf(o.month)>=0&&!planByEmp[n]){planByEmp[n]=o.plan||'';mgrByEmp[n]=o.mgr||'';}
     var q=o.quota||0;
     if(q>0&&(!(n in quotaByEmp)||q>quotaByEmp[n]))quotaByEmp[n]=q;
-    if(included.indexOf(o.month)>=0&&o.contractStatus!=='Non-Signed Contract')actualByEmp[n]=(actualByEmp[n]||0)+o.bk;
+    if(included.indexOf(o.month)>=0&&(!_liveExcludeNonSigned||o.contractStatus!=='Non-Signed Contract'))actualByEmp[n]=(actualByEmp[n]||0)+o.bk;
   });
   var rows=[];
   Object.keys(planByEmp).forEach(function(n){
@@ -3459,6 +3459,7 @@ function renderLiveAtt(){
     '<div class="tabs" id="liveatt-month-tabs">'+mTabs+'</div>'+
     '<div class="tabs" id="liveatt-plan-tabs">'+pTabs+'</div>'+
     '<div class="tabs" id="liveatt-role-tabs">'+rTabs+'</div>'+
+    '<div class="tabs" id="liveatt-filter-tabs"><button class="tab'+(_liveExcludeNonSigned?' active':'')+'" id="liveatt-nonsigned-btn" onclick="toggleLiveExcludeNonSigned()">🚫 Exclude Non-Signed</button></div>'+
     '<div id="liveatt-content"></div></div>';
   renderLiveAttContent();
 }
@@ -3466,6 +3467,7 @@ function setLiveAttMonth(m,btn){_liveAttMonth=m;_liveAttBucket=null;document.que
 function setLiveAttPlan(p,btn){_liveAttPlan=p;_liveAttBucket=null;document.querySelectorAll('#liveatt-plan-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
 function setLiveAttRole(r,btn){_liveAttRole=r;_liveAttBucket=null;document.querySelectorAll('#liveatt-role-tabs .tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');renderLiveAttContent();}
 function setLiveAttBucketFilter(b){_liveAttBucket=(_liveAttBucket===b)?null:b;renderLiveAttContent();}
+function toggleLiveExcludeNonSigned(){_liveExcludeNonSigned=!_liveExcludeNonSigned;var btn=document.getElementById('liveatt-nonsigned-btn');if(btn)btn.classList.toggle('active',_liveExcludeNonSigned);renderLiveAttContent();}
 
 function renderLiveAttContent(){
   var opps=window._liveAttRaw||_oppsData||[];
