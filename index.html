@@ -4628,7 +4628,7 @@ function _buildOrgTree(employees){
     var id=_orgNodes.length;
     _orgNodes.push({id:id,name:e.name,role:e.plan,status:e.status||'Employed',tic:e.tic||0,
       hire:e.hire||'',tn:e.tn||'',leaveStart:e.leaveStart||'',leaveEnd:e.leaveEnd||'',
-      ticChanges:e.ticChanges||[],isVirtual:false,childIds:[]});
+      ticChanges:e.ticChanges||[],transfers:e.transfers||[],isVirtual:false,childIds:[]});
     byKey[e.name.trim().toLowerCase()]=id;
   });
   var virtualByKey={};
@@ -4643,7 +4643,7 @@ function _buildOrgTree(employees){
       if(virtualByKey[mgrKey]===undefined){
         parentId=_orgNodes.length;
         _orgNodes.push({id:parentId,name:mgrRaw,role:'',status:'Employed',tic:0,hire:'',tn:'',
-          leaveStart:'',leaveEnd:'',ticChanges:[],isVirtual:true,childIds:[]});
+          leaveStart:'',leaveEnd:'',ticChanges:[],transfers:[],isVirtual:true,childIds:[]});
         virtualByKey[mgrKey]=parentId;
         _orgRootIds.push(parentId);
       } else {
@@ -4666,6 +4666,7 @@ function _orgRowHtml(id,depth,expanded){
   html+='<span style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0"></span>';
   html+='<span style="font-size:13px;'+nameStyle+'">'+node.name+(node.isVirtual?' <span style="font-size:10px;color:var(--muted)">(not in Employee Data)</span>':'')+'</span>';
   if(node.ticChanges.length)html+='<span title="TIC changed" style="font-size:11px;color:var(--muted)">↻</span>';
+  if(node.transfers.length)html+='<span title="Transferred" style="font-size:11px;color:var(--muted)">⇄</span>';
   html+='<span style="margin-left:auto;font-size:11px;color:var(--muted)">'+(node.role||'')+'</span>';
   html+='</div>';
   html+='<div id="org-detail-'+id+'" style="display:none;margin-left:'+(depth*18+20)+'px;padding:6px 10px;margin-bottom:2px;background:var(--grey-light);border-radius:8px;font-size:12px;color:var(--muted2)"></div>';
@@ -4695,6 +4696,11 @@ function orgRowClick(id){
     if(node.ticChanges.length){
       html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">TIC history:<ul style="margin:4px 0 0;padding-left:16px">';
       node.ticChanges.forEach(function(c){html+='<li>'+c+'</li>';});
+      html+='</ul></div>';
+    }
+    if(node.transfers.length){
+      html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">Transfer history:<ul style="margin:4px 0 0;padding-left:16px">';
+      node.transfers.forEach(function(t){html+='<li>'+t+'</li>';});
       html+='</ul></div>';
     }
     detail.innerHTML=html;
