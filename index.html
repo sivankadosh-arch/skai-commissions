@@ -4613,6 +4613,7 @@ var ORG_MANAGER_ALIAS={'james wasenius':'jim wasenius'};
 var ORG_STATUS_COLOR={'Employed':'#406EF1','Leave':'#FFB900','Terminated':'#FF8161'};
 var _orgNodes=[]; // flat store, indexed by id
 var _orgRootIds=[];
+var _orgStatusFilter={Employed:true,Leave:true,Terminated:true};
 
 function _orgCountReports(node){
   var n=node.childIds.length;
@@ -4743,6 +4744,44 @@ function filterOrgTree(q){
   });
 }
 
+function toggleOrgStatusFilter(status,btn){
+  _orgStatusFilter[status]=!_orgStatusFilter[status];
+  btn.style.opacity=_orgStatusFilter[status]?'1':'0.35';
+  applyOrgStatusFilter();
+}
+
+function applyOrgStatusFilter(){
+  var allOn=_orgStatusFilter.Employed&&_orgStatusFilter.Leave&&_orgStatusFilter.Terminated;
+  var keep={};
+  function visit(id){
+    var node=_orgNodes[id];
+    var selfMatch=!!_orgStatusFilter[node.status];
+    var childMatch=false;
+    node.childIds.forEach(function(cid){if(visit(cid))childMatch=true;});
+    var show=selfMatch||childMatch;
+    if(show)keep[id]=true;
+    return show;
+  }
+  _orgRootIds.forEach(function(rid){visit(rid);});
+
+  document.querySelectorAll('.org-row').forEach(function(row){
+    var id=row.getAttribute('onclick').match(/\d+/)[0];
+    var li=row.closest('li');
+    li.style.display=allOn||keep[id]?'':'none';
+  });
+  if(!allOn){
+    document.querySelectorAll('[id^="org-children-"]').forEach(function(ul){
+      var id=ul.id.replace('org-children-','');
+      if(keep[id]){
+        ul.style.display='block';
+        var row=document.querySelector('.org-row[onclick="orgRowClick('+id+')"]');
+        var chev=row?row.querySelector('.org-chev'):null;
+        if(chev)chev.textContent='▾';
+      }
+    });
+  }
+}
+
 function renderOrgChartContent(){
   var el=document.getElementById('orgchart-content');
   if(!el)return;
@@ -4765,17 +4804,22 @@ function renderOrgChart(){
     '<span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></div>'+
     '<div class="page-sub">Management hierarchy from Employee Data · click a name for details</div></div></div>'+
     '<div class="card">'+
-    '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">'+
-    '<input type="text" placeholder="Filter employee…" oninput="filterOrgTree(this.value)" style="flex:1;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;background:var(--card);color:var(--text)">'+
-    '<span style="font-size:11px;color:var(--muted2);white-space:nowrap">'+
-    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#406EF1"></span> Employed'+
-    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFB900;margin-left:8px"></span> Leave'+
-    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF8161;margin-left:8px"></span> Terminated</span>'+
+    '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">'+
+    '<input type="text" placeholder="Filter employee…" oninput="filterOrgTree(this.value)" style="flex:1;min-width:160px;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;background:var(--card);color:var(--text)">'+
+    '<div id="org-status-filters" style="display:flex;gap:6px">'+
+    _orgStatusChip('Employed','#406EF1')+_orgStatusChip('Leave','#FFB900')+_orgStatusChip('Terminated','#FF8161')+
+    '</div>'+
     '</div>'+
     '<div id="orgchart-content"></div>'+
     '</div>'+
     '</div>';
+  _orgStatusFilter={Employed:true,Leave:true,Terminated:true};
   renderOrgChartContent();
+}
+
+function _orgStatusChip(status,color){
+  return '<button type="button" onclick="toggleOrgStatusFilter(\''+status+'\',this)" data-status="'+status+'" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid '+color+';border-radius:20px;background:var(--card);font-size:11px;color:var(--text);cursor:pointer">'+
+    '<span style="width:8px;height:8px;border-radius:50%;background:'+color+'"></span>'+status+'</button>';
 }
 
 var VIEW_MAP={
