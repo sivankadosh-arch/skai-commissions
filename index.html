@@ -155,6 +155,8 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     <button class="nav-btn" onclick="nav('opps',this)"><span class="icon">🤝</span>Opportunities<span style="margin-left:7px;display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border-radius:20px;padding:1px 7px"><span style="width:5px;height:5px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></button>
     <button class="nav-btn" onclick="nav('oppnet',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Net Opportunities Revenue<span style="margin-left:6px;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border-radius:20px;padding:1px 6px"><span style="width:4px;height:4px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></button>
     <button class="nav-btn" onclick="nav('oppgap',this)" style="padding-left:36px;font-size:12px;color:rgba(255,255,255,0.45)"><span class="icon" style="font-size:12px">↳</span>Close-to-start<span style="margin-left:6px;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border-radius:20px;padding:1px 6px"><span style="width:4px;height:4px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></button>
+    <div class="nav-section">People</div>
+    <button class="nav-btn" onclick="nav('orgchart',this)"><span class="icon">🌳</span>Org chart<span style="margin-left:7px;display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.12);border-radius:20px;padding:1px 7px"><span style="width:5px;height:5px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></button>
     <div class="nav-section">Coming soon</div>
     <button class="nav-btn" style="cursor:default;opacity:0.45" disabled><span class="icon">📋</span>BTR <span style="font-size:9px;font-weight:700;background:rgba(255,185,0,0.25);color:#FFB900;padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">TBA</span></button>
   </nav>
@@ -245,7 +247,7 @@ tfoot tr td{font-size:12px;color:var(--muted2);padding:6px 10px}
     window._srActions=results.map(function(r){return r.action;});
   }
   var _lastSync=null;
-  var _liveViews={overview:1,opps:1,oppnet:1,oppgap:1,liveatt:1};
+  var _liveViews={overview:1,opps:1,oppnet:1,oppgap:1,liveatt:1,orgchart:1};
   function updateLastUpdatedBar(viewKey){
     var el=document.getElementById('last-updated-text');if(!el)return;
     if(_liveViews[viewKey]&&_lastSync){
@@ -1925,6 +1927,7 @@ var CSD_DATA={'Total YTD':[{n:"Peter Phillips",pl:"CSD LEAD",actual:4364750,quot
 
 
 var _oppsData = [];
+var _employeesData = [];
 
 const OPPS_SL = [
   {plan:"Sales Leadership",emp:"Ashley Jenkins",mgr:"",opp:"US Craft Brands LLC-Net-New-Pilot-Adv-platform-WON",type:"Net-New",book:"Platform",bk:22853,month:"January 2026",closed:"1/27/2026",start:"3/1/2026",split:100},
@@ -4605,11 +4608,171 @@ function renderGapContent() {
 }
 
 
+// ── Org chart ──────────────────────────────────────────────────────────
+var ORG_MANAGER_ALIAS={'james wasenius':'jim wasenius'};
+var ORG_STATUS_COLOR={'Employed':'#406EF1','Leave':'#FFB900','Terminated':'#FF8161'};
+var _orgNodes=[]; // flat store, indexed by id
+var _orgRootIds=[];
+
+function _orgCountReports(node){
+  var n=node.childIds.length;
+  node.childIds.forEach(function(cid){n+=_orgCountReports(_orgNodes[cid]);});
+  return n;
+}
+
+function _buildOrgTree(employees){
+  _orgNodes=[];_orgRootIds=[];
+  var byKey={}; // lowercase name -> id
+  employees.forEach(function(e){
+    var id=_orgNodes.length;
+    _orgNodes.push({id:id,name:e.name,role:e.plan,status:e.status||'Employed',tic:e.tic||0,
+      hire:e.hire||'',tn:e.tn||'',leaveStart:e.leaveStart||'',leaveEnd:e.leaveEnd||'',
+      ticChanges:e.ticChanges||[],isVirtual:false,childIds:[]});
+    byKey[e.name.trim().toLowerCase()]=id;
+  });
+  var virtualByKey={};
+  employees.forEach(function(e){
+    var childId=byKey[e.name.trim().toLowerCase()];
+    var mgrRaw=(e.manager||'').trim();
+    if(!mgrRaw){_orgRootIds.push(childId);return;}
+    var mgrKey=mgrRaw.toLowerCase();
+    mgrKey=ORG_MANAGER_ALIAS[mgrKey]||mgrKey;
+    var parentId=byKey[mgrKey];
+    if(parentId===undefined){
+      if(virtualByKey[mgrKey]===undefined){
+        parentId=_orgNodes.length;
+        _orgNodes.push({id:parentId,name:mgrRaw,role:'',status:'Employed',tic:0,hire:'',tn:'',
+          leaveStart:'',leaveEnd:'',ticChanges:[],isVirtual:true,childIds:[]});
+        virtualByKey[mgrKey]=parentId;
+        _orgRootIds.push(parentId);
+      } else {
+        parentId=virtualByKey[mgrKey];
+      }
+    }
+    _orgNodes[parentId].childIds.push(childId);
+  });
+  _orgRootIds.sort(function(a,b){return _orgNodes[a].name.localeCompare(_orgNodes[b].name);});
+}
+
+function _orgRowHtml(id,depth,expanded){
+  var node=_orgNodes[id];
+  var hasKids=node.childIds.length>0;
+  var color=ORG_STATUS_COLOR[node.status]||'#878F91';
+  var nameStyle=node.status==='Terminated'?'text-decoration:line-through;color:var(--muted)':'color:var(--text)';
+  var html='<li style="list-style:none">';
+  html+='<div class="org-row" onclick="orgRowClick('+id+')" style="display:flex;align-items:center;gap:6px;padding:5px 8px;margin-left:'+(depth*18)+'px;border-radius:8px;cursor:pointer">';
+  html+='<span class="org-chev" style="width:14px;display:inline-flex;color:var(--muted);font-size:11px">'+(hasKids?(expanded?'▾':'▸'):'')+'</span>';
+  html+='<span style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0"></span>';
+  html+='<span style="font-size:13px;'+nameStyle+'">'+node.name+(node.isVirtual?' <span style="font-size:10px;color:var(--muted)">(not in Employee Data)</span>':'')+'</span>';
+  if(node.ticChanges.length)html+='<span title="TIC changed" style="font-size:11px;color:var(--muted)">↻</span>';
+  html+='<span style="margin-left:auto;font-size:11px;color:var(--muted)">'+(node.role||'')+'</span>';
+  html+='</div>';
+  html+='<div id="org-detail-'+id+'" style="display:none;margin-left:'+(depth*18+20)+'px;padding:6px 10px;margin-bottom:2px;background:var(--grey-light);border-radius:8px;font-size:12px;color:var(--muted2)"></div>';
+  if(hasKids){
+    html+='<ul id="org-children-'+id+'" style="margin:0;padding:0;border-left:1px solid var(--border);margin-left:'+(depth*18+15)+'px;display:'+(expanded?'block':'none')+'">';
+    node.childIds.slice().sort(function(a,b){return _orgNodes[a].name.localeCompare(_orgNodes[b].name);}).forEach(function(cid){
+      html+=_orgRowHtml(cid,depth+1,false);
+    });
+    html+='</ul>';
+  }
+  html+='</li>';
+  return html;
+}
+
+function orgRowClick(id){
+  var node=_orgNodes[id];
+  var childUl=document.getElementById('org-children-'+id);
+  var row=document.querySelector('.org-row[onclick="orgRowClick('+id+')"]');
+  var chev=row?row.querySelector('.org-chev'):null;
+  var detail=document.getElementById('org-detail-'+id);
+  document.querySelectorAll('[id^="org-detail-"]').forEach(function(d){if(d!==detail)d.style.display='none';});
+  var showing=detail.style.display!=='none';
+  if(!showing){
+    var html='Role: '+(node.role||'—')+' &nbsp;|&nbsp; TIC: '+fm(node.tic)+' &nbsp;|&nbsp; Hire date: '+(node.hire||'—')+' &nbsp;|&nbsp; Reports: '+_orgCountReports(node);
+    if(node.status==='Terminated'&&node.tn)html+=' &nbsp;|&nbsp; <span style="color:#FF8161;font-weight:600">TN date: '+node.tn+'</span>';
+    if(node.status==='Leave'&&node.leaveStart)html+=' &nbsp;|&nbsp; <span style="color:#FFB900;font-weight:600">Leave: '+node.leaveStart+' – '+(node.leaveEnd||'—')+'</span>';
+    if(node.ticChanges.length){
+      html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">TIC history:<ul style="margin:4px 0 0;padding-left:16px">';
+      node.ticChanges.forEach(function(c){html+='<li>'+c+'</li>';});
+      html+='</ul></div>';
+    }
+    detail.innerHTML=html;
+    detail.style.display='block';
+  } else {
+    detail.style.display='none';
+  }
+  if(childUl&&childUl.style.display==='none'){
+    childUl.style.display='block';
+    if(chev)chev.textContent='▾';
+  }
+}
+
+function filterOrgTree(q){
+  q=q.trim().toLowerCase();
+  document.querySelectorAll('.org-row').forEach(function(row){
+    var nameEl=row.querySelector('span[style*="font-size:13px"]');
+    var name=nameEl?nameEl.textContent.toLowerCase():'';
+    var match=q.length>0&&name.indexOf(q)>=0;
+    row.style.background=match?'#406EF118':'';
+    if(match){
+      var li=row.closest('li');
+      while(li){
+        var parentUl=li.parentElement;
+        if(parentUl&&parentUl.tagName==='UL'&&parentUl.id&&parentUl.id.indexOf('org-children-')===0){
+          parentUl.style.display='block';
+          var parentId=parentUl.id.replace('org-children-','');
+          var parentRow=document.querySelector('.org-row[onclick="orgRowClick('+parentId+')"]');
+          var pchev=parentRow?parentRow.querySelector('.org-chev'):null;
+          if(pchev)pchev.textContent='▾';
+        }
+        var parentLi=parentUl?parentUl.closest('li'):null;
+        li=parentLi;
+      }
+    }
+  });
+}
+
+function renderOrgChartContent(){
+  var el=document.getElementById('orgchart-content');
+  if(!el)return;
+  if(!_employeesData.length){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted2)">Loading employee data…</div>';
+    return;
+  }
+  _buildOrgTree(_employeesData);
+  var html='<ul style="margin:0;padding:0">';
+  _orgRootIds.forEach(function(rid){html+=_orgRowHtml(rid,0,true);});
+  html+='</ul>';
+  el.innerHTML=html;
+}
+
+function renderOrgChart(){
+  document.getElementById('main').innerHTML=
+    '<div class="view">'+
+    '<div class="topbar"><div><div class="page-title" style="display:flex;align-items:center;gap:10px">Org chart'+
+    '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#4CAF50;background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);border-radius:20px;padding:2px 10px">'+
+    '<span style="width:6px;height:6px;border-radius:50%;background:#4CAF50;display:inline-block;animation:livePulse 2s infinite"></span>Live</span></div>'+
+    '<div class="page-sub">Management hierarchy from Employee Data · click a name for details</div></div></div>'+
+    '<div class="card">'+
+    '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">'+
+    '<input type="text" placeholder="Filter employee…" oninput="filterOrgTree(this.value)" style="flex:1;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;background:var(--card);color:var(--text)">'+
+    '<span style="font-size:11px;color:var(--muted2);white-space:nowrap">'+
+    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#406EF1"></span> Employed'+
+    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFB900;margin-left:8px"></span> Leave'+
+    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF8161;margin-left:8px"></span> Terminated</span>'+
+    '</div>'+
+    '<div id="orgchart-content"></div>'+
+    '</div>'+
+    '</div>';
+  renderOrgChartContent();
+}
+
 var VIEW_MAP={
   overview:renderOverview,trend:renderTrend,bookings:renderBookings,
   csd:renderCSD,leaders:renderLeaders,managers:renderManagers,
   liveatt:renderLiveAtt,payrate:renderPayRate,spiff:renderSpiff,
-  breakdown:renderBreakdown,opps:renderOpps,oppnet:renderOppNet,oppgap:renderOppGap
+  breakdown:renderBreakdown,opps:renderOpps,oppnet:renderOppNet,oppgap:renderOppGap,
+  orgchart:renderOrgChart
 };
 function nav(view,btn){
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
@@ -4754,6 +4917,7 @@ function syncFromWebApp(){
       }).filter(function(o){return o.opp&&o.emp;});
       if(opps.length<10)return;
       _oppsData=opps;
+      _employeesData=json.employees||[];
       var _now=new Date();_lastSync=_now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+_now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
       var activeNav=document.querySelector('.nav-btn.active');var activeView=activeNav?activeNav.getAttribute('onclick').match(/nav\('(\w+)'/):null;if(activeView)updateLastUpdatedBar(activeView[1]);
 
@@ -4840,6 +5004,7 @@ function syncFromWebApp(){
       if(document.getElementById('gap-content'))renderOppGap();
       window._liveAttRaw=opps;
       if(document.getElementById('liveatt-content'))renderLiveAttContent();
+      if(document.getElementById('orgchart-content'))renderOrgChartContent();
     })
     .catch(function(e){console.error('Opportunities fetch error:',e);});
 }
