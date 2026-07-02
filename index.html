@@ -4661,7 +4661,7 @@ function _orgRowHtml(id,depth,expanded){
   var nameStyle=node.status==='Terminated'?'text-decoration:line-through;color:var(--muted)':'color:var(--text)';
   var html='<li style="list-style:none">';
   html+='<div class="org-row" onclick="orgRowClick('+id+')" style="display:flex;align-items:center;gap:6px;padding:5px 8px;margin-left:'+(depth*18)+'px;border-radius:8px;cursor:pointer">';
-  html+='<span class="org-chev" style="width:14px;display:inline-flex;color:var(--muted);font-size:11px">'+(hasKids?(expanded?'▾':'▸'):'')+'</span>';
+  html+='<span class="org-chev" onclick="'+(hasKids?'orgToggleChildren('+id+',event)':'')+'" style="width:14px;display:inline-flex;color:var(--muted);font-size:11px'+(hasKids?';cursor:pointer':'')+'">'+(hasKids?(expanded?'▾':'▸'):'')+'</span>';
   html+='<span style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0"></span>';
   html+='<span style="font-size:13px;'+nameStyle+'">'+node.name+(node.isVirtual?' <span style="font-size:10px;color:var(--muted)">(not in Employee Data)</span>':'')+'</span>';
   if(node.ticChanges.length)html+='<span title="TIC changed" style="font-size:11px;color:var(--muted)">↻</span>';
@@ -4686,8 +4686,8 @@ function orgRowClick(id){
   var chev=row?row.querySelector('.org-chev'):null;
   var detail=document.getElementById('org-detail-'+id);
   document.querySelectorAll('[id^="org-detail-"]').forEach(function(d){if(d!==detail)d.style.display='none';});
-  var showing=detail.style.display!=='none';
-  if(!showing){
+  var opening=detail.style.display==='none';
+  if(opening){
     var html='Role: '+(node.role||'—')+' &nbsp;|&nbsp; TIC: '+fm(node.tic)+' &nbsp;|&nbsp; Hire date: '+(node.hire||'—')+' &nbsp;|&nbsp; Reports: '+_orgCountReports(node);
     if(node.status==='Terminated'&&node.tn)html+=' &nbsp;|&nbsp; <span style="color:#FF8161;font-weight:600">TN date: '+node.tn+'</span>';
     if(node.status==='Leave'&&node.leaveStart)html+=' &nbsp;|&nbsp; <span style="color:#FFB900;font-weight:600">Leave: '+node.leaveStart+' – '+(node.leaveEnd||'—')+'</span>';
@@ -4701,10 +4701,21 @@ function orgRowClick(id){
   } else {
     detail.style.display='none';
   }
-  if(childUl&&childUl.style.display==='none'){
-    childUl.style.display='block';
-    if(chev)chev.textContent='▾';
+  if(childUl){
+    childUl.style.display=opening?'block':'none';
+    if(chev)chev.textContent=opening?'▾':'▸';
   }
+}
+
+function orgToggleChildren(id,event){
+  event.stopPropagation();
+  var childUl=document.getElementById('org-children-'+id);
+  if(!childUl)return;
+  var row=document.querySelector('.org-row[onclick="orgRowClick('+id+')"]');
+  var chev=row?row.querySelector('.org-chev'):null;
+  var isOpen=childUl.style.display!=='none';
+  childUl.style.display=isOpen?'none':'block';
+  if(chev)chev.textContent=isOpen?'▸':'▾';
 }
 
 function filterOrgTree(q){
